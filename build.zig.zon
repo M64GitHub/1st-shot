@@ -1,0 +1,20 @@
+.{
+    .name = ._1st_shot,
+    .version = "0.0.0",
+
+    .fingerprint = 0x7fb6433681e53549,
+
+    .minimum_zig_version = "0.14.0",
+
+    .dependencies = .{
+        .movy = .{
+            .path = "../movy",
+        },
+    },
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
