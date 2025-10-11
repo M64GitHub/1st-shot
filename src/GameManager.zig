@@ -9,6 +9,7 @@ const ObstacleManager = @import("ObstacleManager.zig").ObstacleManager;
 const VisualsManager = @import("VisualsManager.zig").VisualsManager;
 const GameVisuals = @import("GameVisuals.zig").GameVisuals;
 const StatusWindow = @import("StatusWindow.zig").StatusWindow;
+const Starfield = @import("Starfield.zig").Starfield;
 
 const Lives = 2;
 
@@ -21,6 +22,7 @@ pub const GameManager = struct {
     visuals: GameVisuals,
     vismanager: VisualsManager,
     statuswin: StatusWindow,
+    starfield: *Starfield,
     screen: *movy.Screen,
     frame_counter: usize = 0,
 
@@ -41,6 +43,7 @@ pub const GameManager = struct {
                 movy.color.DARK_BLUE,
                 movy.color.GRAY,
             ),
+            .starfield = try Starfield.init(allocator, screen),
             .visuals = try GameVisuals.init(allocator, screen),
             .vismanager = VisualsManager.init(allocator, screen),
             .exploder = try ExplosionManager.init(allocator, screen),
@@ -217,6 +220,8 @@ pub const GameManager = struct {
         }
         try self.vismanager.update(allocator, self.frame_counter);
 
+        self.starfield.update();
+
         // Update state transitions or timers
         self.gamestate.update(self.frame_counter);
 
@@ -225,12 +230,14 @@ pub const GameManager = struct {
 
     // -- render
     pub fn renderFrame(self: *GameManager) !void {
-        try self.screen.renderInit();
+        try self.screen.renderInit(); // clears output surfaces
         try self.exploder.addRenderSurfaces();
         try self.player.ship.addRenderSurfaces();
         try self.player.weapon_manager.addRenderSurfaces();
         try self.shields.addRenderSurfaces();
         try self.obstacles.addRenderSurfaces();
+
+        try self.screen.addRenderSurface(self.starfield.out_surface);
         self.screen.render();
 
         // VisualsManager adds its surfaces on demand, and dims, etc
