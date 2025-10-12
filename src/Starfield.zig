@@ -87,11 +87,6 @@ pub const Starfield = struct {
                 @as(usize, @intCast(star.x));
 
             const dot_char: u21 = switch (star.z) {
-                // 0...49 => 0x00B7, // ·
-                // 50...99 => 0x2022, // •
-                // 100...149 => 0x25E6, // ◦
-                // 150...199 => 0x25CF, // ●
-                // else => 0x25C9, // ◉
                 0...49 => 0x00B7, // ·
                 50...99 => 0x2022, // •
                 100...149 => 0x25E6, // ◦
