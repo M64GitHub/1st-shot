@@ -71,12 +71,12 @@ pub const ObstacleManager = struct {
     active_obstacles: [MaxObstacles]Obstacle,
 
     // auto spawn
-    target_count: usize = 64,
+    target_count: usize = 8,
     spawn_cooldown: u8 = 0,
-    spawn_interval: u8 = 36, // spawn wvery n frames
+    spawn_interval: u8 = 60, // 36, // spawn wvery n frames
     rng: std.Random.DefaultPrng,
 
-    pub const MaxObstacles = 128;
+    pub const MaxObstacles = 32;
 
     pub fn init(
         allocator: std.mem.Allocator,

@@ -3,8 +3,8 @@ const movy = @import("movy");
 
 pub const Starfield = struct {
     stars: [MaxStars]Star = undefined,
-    depth: i32 = 200,
-    threshold: i32 = 900, // Grenzwert für Bewegung
+    depth: i32 = 250,
+    threshold: i32 = 900, // Threshold for movement
     frame_counter: usize = 0,
     out_surface: *movy.RenderSurface,
     rng: std.Random.DefaultPrng,
@@ -15,8 +15,8 @@ pub const Starfield = struct {
         x: i32,
         y: i32,
         z: i32,
-        accumulator: i32, // Akkumulator für smooth Bewegung
-        adder_value: i32, // Schritt pro Frame
+        accumulator: i32, // Accumulator for smooth movement
+        adder_value: i32, // Step per frame
     };
 
     pub fn init(
@@ -57,6 +57,10 @@ pub const Starfield = struct {
         return self;
     }
 
+    pub fn deinit(self: *Starfield, allocator: std.mem.Allocator) void {
+        allocator.destroy(self);
+    }
+
     pub fn update(self: *Starfield) void {
         self.frame_counter += 1;
         const w = self.out_surface.w;
@@ -75,36 +79,35 @@ pub const Starfield = struct {
                 star.y = 0;
                 star.x = self.rng.random().intRangeAtMost(i32, 0, @intCast(w - 1));
                 star.z = self.rng.random().intRangeAtMost(i32, 0, self.depth);
-                star.adder_value = star.z + 50; // Neuer adder_value
-                star.accumulator = 0; // Reset bei Neustart
+                star.adder_value = star.z + 50;
+                star.accumulator = 0;
             }
-
-            // if (star.y < 0 or star.y >= h or star.x < 0 or star.x >= w) continue;
 
             const idx = @as(usize, @intCast(star.y)) * w +
                 @as(usize, @intCast(star.x));
 
             const dot_char: u21 = switch (star.z) {
+                // 0...49 => 0x00B7, // ·
+                // 50...99 => 0x2022, // •
+                // 100...149 => 0x25E6, // ◦
+                // 150...199 => 0x25CF, // ●
+                // else => 0x25C9, // ◉
                 0...49 => 0x00B7, // ·
                 50...99 => 0x2022, // •
                 100...149 => 0x25E6, // ◦
-                150...199 => 0x25CF, // ●
-                else => 0x25C9, // ◉
+                150...199 => '*', // ●
+                else => 0x25CF, // ● 0x25C9, // ◉
             };
             self.out_surface.char_map[idx] = dot_char;
 
             const color_val = @as(u8, @intCast(@min(250, star.z + 50)));
 
             self.out_surface.color_map[idx] = .{
-                .r = color_val,
-                .g = color_val,
+                .r = color_val / 2 + 25,
+                .g = color_val / 2 + 25,
                 .b = color_val,
             }; // 250 shades of gray ;)
             self.out_surface.shadow_map[idx] = 1;
         }
-    }
-
-    pub fn deinit(self: *Starfield, allocator: std.mem.Allocator) void {
-        allocator.destroy(self);
     }
 };

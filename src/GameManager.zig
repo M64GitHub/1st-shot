@@ -134,6 +134,7 @@ pub const GameManager = struct {
                 );
                 try self.exploder.update();
                 try self.obstacles.update();
+                self.starfield.update();
                 self.doProjectileCollisions();
                 if (self.gamestate.state == .Playing) {
                     if (self.shields.active_shield == .None) {
@@ -152,6 +153,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                self.starfield.update();
                 self.doProjectileCollisions();
             },
             .Respawning,
@@ -163,6 +165,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                self.starfield.update();
                 self.doProjectileCollisions();
             },
             .FadeToGameOver => {
@@ -186,12 +189,14 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                self.starfield.update();
                 self.doProjectileCollisions();
             },
             .GameOver => {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                self.starfield.update();
                 self.doProjectileCollisions();
             },
             .FadingToPause => {
@@ -219,8 +224,6 @@ pub const GameManager = struct {
             else => {},
         }
         try self.vismanager.update(allocator, self.frame_counter);
-
-        self.starfield.update();
 
         // Update state transitions or timers
         self.gamestate.update(self.frame_counter);
