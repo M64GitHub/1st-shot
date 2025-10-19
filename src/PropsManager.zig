@@ -9,6 +9,8 @@ pub const PropType = enum {
     PointsBonus,
 };
 
+pub const ANI_SPEED: usize = 2;
+
 pub const Prop = struct {
     sprite: *Sprite = undefined,
     sprite_pool: *movy.graphic.SpritePool = undefined,
@@ -95,8 +97,10 @@ pub const Prop = struct {
         if (self.speed_value >= self.speed_threshold) {
             self.speed_value -= self.speed_threshold;
             self.y += 2; // move downward
-
         }
+
+        self.sprite.stepActiveAnimation();
+
         self.sprite.setXY(self.x, self.y);
 
         // Deactivate if off-screen
@@ -106,6 +110,7 @@ pub const Prop = struct {
         {
             self.active = false;
         }
+        self.draw();
     }
 
     pub fn getCenterCoords(self: *Prop) struct { x: i32, y: i32 } {
@@ -169,6 +174,13 @@ pub const PropsManager = struct {
                 ammo_path,
                 "ammo_prop",
             );
+            try s.splitByWidth(allocator, 14);
+            try s.addAnimation(
+                allocator,
+                "pulse",
+                Sprite.FrameAnimation.init(1, 16, .loopForward, ANI_SPEED),
+            );
+            try s.startAnimation("pulse");
             try self.ammo_pool.addSprite(s);
 
             // Extra life sprite
@@ -177,6 +189,13 @@ pub const PropsManager = struct {
                 life_path,
                 "life_prop",
             );
+            try s.splitByWidth(allocator, 14);
+            try s.addAnimation(
+                allocator,
+                "pulse",
+                Sprite.FrameAnimation.init(1, 16, .loopForward, ANI_SPEED),
+            );
+            try s.startAnimation("pulse");
             try self.life_pool.addSprite(s);
 
             // Shield bonus sprite
@@ -185,6 +204,13 @@ pub const PropsManager = struct {
                 shield_path,
                 "shield_prop",
             );
+            try s.splitByWidth(allocator, 14);
+            try s.addAnimation(
+                allocator,
+                "pulse",
+                Sprite.FrameAnimation.init(1, 16, .loopForward, ANI_SPEED),
+            );
+            try s.startAnimation("pulse");
             try self.shield_pool.addSprite(s);
 
             // Points bonus sprite
@@ -193,6 +219,13 @@ pub const PropsManager = struct {
                 points_path,
                 "points_prop",
             );
+            try s.splitByWidth(allocator, 14);
+            try s.addAnimation(
+                allocator,
+                "pulse",
+                Sprite.FrameAnimation.init(1, 16, .loopForward, ANI_SPEED),
+            );
+            try s.startAnimation("pulse");
             try self.points_pool.addSprite(s);
         }
     }
@@ -248,7 +281,7 @@ pub const PropsManager = struct {
                     .collected = false,
                     .value = value,
                 };
-                prop.draw();
+                // prop.draw();
                 return true;
             }
         }
