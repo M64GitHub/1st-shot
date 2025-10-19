@@ -25,6 +25,7 @@ pub const PlayerShip = struct {
     last_ammo_milestone: usize = 0,
     last_shield_milestone: usize = 0,
     last_life_milestone: usize = 0,
+    last_dropstacle_milestone: usize = 0,
 
     pub const HealthMode = enum {
         Vulnerable,

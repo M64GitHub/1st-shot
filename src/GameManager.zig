@@ -17,6 +17,11 @@ const DropStacleManager = @import("DropStacleManager.zig").DropStacleManager;
 const DropStacleType = @import("DropStacleManager.zig").DropStacleType;
 
 const Lives = 3;
+const Points_For_Ammo: usize = 3000;
+const Points_For_Shield: usize = 5000;
+const Points_For_Life: usize = 10000;
+
+const Points_For_Dropstacle: usize = 4000;
 
 pub const GameManager = struct {
     player: PlayerShip,
@@ -150,6 +155,11 @@ pub const GameManager = struct {
                 try self.props.update();
                 try self.dropstacles.update();
                 // maybe animate screen brightness here
+                // spawn the weapon
+                const spawn_x = @as(i32, @intCast(self.screen.w / 2));
+                if (self.gamestate.justTransitioned()) {
+                    try self.dropstacles.trySpawn(spawn_x, -10, .AmmoDrop);
+                }
             },
             .StartingInvincible, .AlmostVulnerable, .Playing => {
                 if (self.gamestate.justTransitioned()) {
@@ -159,7 +169,7 @@ pub const GameManager = struct {
                     }
                     if (self.gamestate.state == .StartingInvincible) {
                         self.shields.activate(.Default);
-                        self.shields.default_shield.cooldown_ctr = 500;
+                        self.shields.default_shield.cooldown_ctr = 250;
                     }
                     if (self.gamestate.state == .AlmostVulnerable) {}
                 }
@@ -177,6 +187,7 @@ pub const GameManager = struct {
                 self.doProjectileCollisions();
                 self.doDropStacleCollisions();
                 self.handlePropCollision();
+                self.handleDropCollision();
             },
             .Dying,
             => {
@@ -194,6 +205,7 @@ pub const GameManager = struct {
                 try self.props.update();
                 self.doProjectileCollisions();
                 self.handlePropCollision();
+                self.handleDropCollision();
             },
             .Respawning,
             => {
@@ -415,80 +427,82 @@ pub const GameManager = struct {
             )) {
                 const pos_ship = self.player.ship.getCenterCoords();
                 const pos_obs = obstacle.getCenterCoords();
+                var sign: i32 = 1;
 
+                if (pos_ship.x < pos_obs.x) {
+                    sign = -1;
+                }
                 if (self.shields.active_shield == .None) {
-                    var sign: i32 = 1;
+                    self.exodus(sign);
+                } else {
+                    if (obstacle.tryDestroy()) {
+                        const exp_type: ExplosionType = switch (obstacle.kind) {
+                            .AsteroidSmall => .Big,
+                            .AsteroidBig => .Big,
+                            .AsteroidBig2 => .Big,
+                            .AsteroidHuge => .Huge,
+                        };
 
-                    if (pos_ship.x < pos_obs.x) {
-                        sign = -1;
+                        self.exploder.tryExplode(
+                            pos_obs.x,
+                            pos_obs.y,
+                            exp_type,
+                        ) catch {};
+
+                        self.player.score += obstacle.score;
+
+                        _ = self.props.spawnPointsBonus(
+                            pos_obs.x - 6,
+                            pos_obs.y - 3,
+                            obstacle.score,
+                        ) catch {};
+
+                        // Check for milestone rewards
+                        self.checkScoreMilestones();
                     }
-
-                    self.exploder.tryExplodeDelayed(
-                        pos_ship.x - 5 * sign,
-                        pos_ship.y - 5,
-                        .Small,
-                        0,
-                    ) catch {};
-
-                    self.exploder.tryExplodeDelayed(
-                        pos_ship.x + 5 * sign,
-                        pos_ship.y + 5,
-                        .Small,
-                        10,
-                    ) catch {};
-
-                    self.exploder.tryExplodeDelayed(
-                        pos_ship.x + 5 * sign,
-                        pos_ship.y - 5,
-                        .Small,
-                        20,
-                    ) catch {};
-                    self.exploder.tryExplodeDelayed(
-                        pos_ship.x - 5 * sign,
-                        pos_ship.y + 5,
-                        .Small,
-                        30,
-                    ) catch {};
-
-                    self.exploder.tryExplodeDelayed(
-                        pos_ship.x,
-                        pos_ship.y,
-                        .Huge,
-                        40,
-                    ) catch {};
-                }
-
-                if (obstacle.tryDestroy()) {
-                    const exp_type: ExplosionType = switch (obstacle.kind) {
-                        .AsteroidSmall => .Big,
-                        .AsteroidBig => .Big,
-                        .AsteroidBig2 => .Big,
-                        .AsteroidHuge => .Huge,
-                    };
-
-                    self.exploder.tryExplode(
-                        pos_obs.x,
-                        pos_obs.y,
-                        exp_type,
-                    ) catch {};
-
-                    self.player.score += obstacle.score;
-
-                    _ = self.props.spawnPointsBonus(
-                        pos_obs.x - 6,
-                        pos_obs.y - 3,
-                        obstacle.score,
-                    ) catch {};
-
-                    // Check for milestone rewards
-                    self.checkScoreMilestones();
-                }
-
-                if (self.shields.active_shield == .None) {
-                    self.gamestate.transitionTo(.Dying);
                 }
             }
         }
+    }
+
+    pub fn exodus(self: *GameManager, sign: i32) void {
+        const pos_ship = self.player.ship.getCenterCoords();
+
+        self.exploder.tryExplodeDelayed(
+            pos_ship.x - 5 * sign,
+            pos_ship.y - 5,
+            .Small,
+            0,
+        ) catch {};
+
+        self.exploder.tryExplodeDelayed(
+            pos_ship.x + 5 * sign,
+            pos_ship.y + 5,
+            .Small,
+            10,
+        ) catch {};
+
+        self.exploder.tryExplodeDelayed(
+            pos_ship.x + 5 * sign,
+            pos_ship.y - 5,
+            .Small,
+            20,
+        ) catch {};
+        self.exploder.tryExplodeDelayed(
+            pos_ship.x - 5 * sign,
+            pos_ship.y + 5,
+            .Small,
+            30,
+        ) catch {};
+
+        self.exploder.tryExplodeDelayed(
+            pos_ship.x,
+            pos_ship.y,
+            .Huge,
+            40,
+        ) catch {};
+
+        self.gamestate.transitionTo(.Dying);
     }
 
     pub fn doDefaultWeaponCollisions(self: *GameManager) void {
@@ -607,8 +621,6 @@ pub const GameManager = struct {
         }
     }
 
-    // Add to GameManager.zig
-
     pub fn handlePropCollision(self: *GameManager) void {
         // Check ship collision with props
         for (&self.props.active_props) |*prop| {
@@ -625,6 +637,37 @@ pub const GameManager = struct {
                 // Collect the prop and apply its effect
                 self.applyPropEffect(prop);
                 prop.collect();
+            }
+        }
+    }
+
+    pub fn handleDropCollision(self: *GameManager) void {
+        // Check ship collision with props
+        if (self.shields.active_shield != .None) return;
+
+        for (&self.dropstacles.active_dropstacles) |*drop| {
+            if (!drop.active) continue;
+
+            // Check collision between ship and prop (generous hitbox for pickups)
+            const coll_inset: i32 = -4; // Negative inset = larger hitbox for easier pickup
+
+            if (checkCollision(
+                self.player.ship.sprite_ship,
+                drop.sprite,
+                coll_inset,
+            )) {
+                self.exodus(1);
+
+                if (drop.tryDestroy()) {
+                    const pos_drop = drop.getCenterCoords();
+
+                    // Bigger explosion when dropstacle is destroyed
+                    self.exploder.tryExplode(
+                        pos_drop.x,
+                        pos_drop.y,
+                        .BigBlu,
+                    ) catch {};
+                }
             }
         }
     }
@@ -667,8 +710,8 @@ pub const GameManager = struct {
     pub fn checkScoreMilestones(self: *GameManager) void {
         const score = self.player.score;
 
-        // Check for ammo bonus every 1000 points
-        const current_ammo_milestone = score / 500;
+        // Check for ammo bonus every X points
+        const current_ammo_milestone = score / Points_For_Ammo;
         if (current_ammo_milestone > self.player.last_ammo_milestone) {
             // Spawn ammo at random position near top of screen
             const rand_x: i32 = self.obstacles.rng.random().intRangeAtMost(
@@ -680,8 +723,8 @@ pub const GameManager = struct {
             self.player.last_ammo_milestone = current_ammo_milestone;
         }
 
-        // Check for shield bonus every 1000 points
-        const current_shield_milestone = score / 1000;
+        // Check for shield bonus every X points
+        const current_shield_milestone = score / Points_For_Shield;
         if (current_shield_milestone > self.player.last_shield_milestone) {
             // Spawn shield at random position near top of screen
             const rand_x: i32 = self.obstacles.rng.random().intRangeAtMost(
@@ -693,8 +736,8 @@ pub const GameManager = struct {
             self.player.last_shield_milestone = current_shield_milestone;
         }
 
-        // Check for extra life every 10000 points
-        const current_life_milestone = score / 2000;
+        // Check for extra life every X points
+        const current_life_milestone = score / Points_For_Life;
         if (current_life_milestone > self.player.last_life_milestone) {
             // Spawn life at random position near top of screen
             const rand_x: i32 = self.obstacles.rng.random().intRangeAtMost(
@@ -704,6 +747,14 @@ pub const GameManager = struct {
             );
             _ = self.props.spawnExtraLife(rand_x, -10) catch {};
             self.player.last_life_milestone = current_life_milestone;
+        }
+
+        // Check for extra life every X points
+        const current_dropstacle_milestone = score / Points_For_Dropstacle;
+        if (current_dropstacle_milestone > self.player.last_dropstacle_milestone) {
+            // Spawn life at random position near top of screen
+            self.dropstacles.spawnOne() catch {};
+            self.player.last_dropstacle_milestone = current_dropstacle_milestone;
         }
     }
 

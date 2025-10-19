@@ -179,16 +179,16 @@ pub const ObstacleManager = struct {
         } orelse return;
 
         const min_speed: usize = switch (kind) {
-            .AsteroidSmall => 20,
-            .AsteroidBig => 20,
-            .AsteroidBig2 => 20,
-            .AsteroidHuge => 15,
+            .AsteroidSmall => 20 + 8,
+            .AsteroidBig => 20 + 5,
+            .AsteroidBig2 => 20 + 8,
+            .AsteroidHuge => 15 + 5,
         };
         const max_speed: usize = switch (kind) {
-            .AsteroidSmall => 30,
-            .AsteroidBig => 25,
-            .AsteroidBig2 => 25,
-            .AsteroidHuge => 25,
+            .AsteroidSmall => 30 + 15,
+            .AsteroidBig => 25 + 15,
+            .AsteroidBig2 => 25 + 15,
+            .AsteroidHuge => 25 + 8,
         };
 
         const spritepool: *movy.graphic.SpritePool = switch (kind) {

@@ -11,6 +11,8 @@ pub const DropStacleType = enum {
     Jackpot, // Drops shield + life + ammo at once!
 };
 
+pub const SPAWN_INTERVAL: usize = 60 * 30;
+
 pub const DropStacle = struct {
     sprite: *Sprite = undefined,
     sprite_pool: *movy.graphic.SpritePool = undefined,
@@ -81,8 +83,8 @@ pub const DropStacleManager = struct {
 
     // Auto spawn configuration
     target_count: usize = 2,
-    spawn_cooldown: u16 = 0,
-    spawn_interval: u16 = 60, // Spawn every ~10 seconds
+    spawn_cooldown: u16 = SPAWN_INTERVAL,
+    spawn_interval: u16 = SPAWN_INTERVAL, // Spawn every ~10 seconds
     rng: std.Random.DefaultPrng,
 
     pub const MaxDropStacles = 16;
@@ -259,6 +261,26 @@ pub const DropStacleManager = struct {
                 break;
             }
         }
+    }
+
+    pub fn spawnOne(self: *DropStacleManager) !void {
+        const rand_x: i32 = self.rng.random().intRangeAtMost(
+            i32,
+            0,
+            @as(i32, @intCast(self.screen.w)),
+        );
+
+        // Weighted random drop type
+        const roll = self.rng.random().intRangeLessThan(u8, 0, 100);
+        const kind: DropStacleType = switch (roll) {
+            0...39 => DropStacleType.AmmoDrop, // 40% - Most common
+            40...64 => DropStacleType.ShieldDrop, // 25%
+            65...84 => DropStacleType.LifeDrop, // 20%
+            85...94 => DropStacleType.SpecialWeapon, // 10%
+            else => DropStacleType.Jackpot, // 5% - Rare!
+        };
+
+        try self.trySpawn(rand_x, -10, kind);
     }
 
     pub fn update(self: *DropStacleManager) !void {

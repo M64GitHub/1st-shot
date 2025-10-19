@@ -149,7 +149,8 @@
 				<label for="animEffect">Animation Effect:</label>
 				<select id="animEffect">
 					<option value="none">None</option>
-					<option value="brightenInside">Brighten Inside</option>
+					<option value="brightenInside">Brighten Inside (multiply)</option>
+					<option value="fadeToWhiteInside">Fade to White Inside</option>
 					<option value="darkenInside">Darken Inside</option>
 					<option value="brightenHighlights">Brighten Highlights (uses Param 2)</option>
 					<option value="brightenAll">Brighten All (Border + Inside)</option>
@@ -233,6 +234,9 @@
 			rounded shapes with transparent corners!
 			<br><strong>Tip:</strong> "Brighten Highlights" uses Parameter 2 as threshold (0.0=darks,
 			1.0=brights).
+			<br><strong>Brighten vs Fade:</strong> "Brighten Inside" multiplies colors (more vibrant). "Fade
+			to White Inside" interpolates toward pure white (washing out effect). Both only affect interior
+			pixels, not the border.
 			<br><strong id="loadStatus"></strong>
 		</div>
 	</div>
@@ -359,6 +363,15 @@
 			switch (e) {
 				case 'brightenInside':
 					return {r: Math.min(255, c.r * f), g: Math.min(255, c.g * f), b: Math.min(255, c.b * f)};
+				case 'fadeToWhiteInside':
+					// Interpolate toward white (255, 255, 255)
+					// progress ranges from 0 to 1 based on intensity
+					const whitePr = pr * Math.min(1, (i - 1) / 9); // normalize intensity to 0-1 range
+					return {
+						r: Math.min(255, c.r + (255 - c.r) * whitePr),
+						g: Math.min(255, c.g + (255 - c.g) * whitePr),
+						b: Math.min(255, c.b + (255 - c.b) * whitePr)
+					};
 				case 'darkenInside':
 					const df = 1 / f;
 					return {r: c.r * df, g: c.g * df, b: c.b * df};
