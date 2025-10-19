@@ -2,9 +2,6 @@ const std = @import("std");
 const movy = @import("movy");
 const Sprite = movy.graphic.Sprite;
 
-const SPEED_Y = 3;
-const MOV_Y = 2;
-
 pub const PropType = enum {
     AmmoBonus,
     ExtraLife,
@@ -20,8 +17,11 @@ pub const Prop = struct {
     y: i32 = 0,
     kind: PropType = .AmmoBonus,
     active: bool = false,
-    speed: usize = SPEED_Y,
-    speed_ctr: usize = 0,
+
+    speed_adder: usize = 0,
+    speed_value: usize = 0,
+    speed_threshold: usize = 0,
+
     collected: bool = false,
     value: u32 = 0, // For points and ammo amounts
 
@@ -91,12 +91,12 @@ pub const Prop = struct {
     }
 
     pub fn update(self: *Prop) void {
-        if (self.speed_ctr > 0) {
-            self.speed_ctr -= 1;
-            return;
+        self.speed_value += self.speed_adder;
+        if (self.speed_value >= self.speed_threshold) {
+            self.speed_value -= self.speed_threshold;
+            self.y += 2; // move downward
+
         }
-        self.speed_ctr = self.speed;
-        self.y += MOV_Y; // move downward
         self.sprite.setXY(self.x, self.y);
 
         // Deactivate if off-screen
@@ -132,6 +132,7 @@ pub const PropsManager = struct {
     shield_pool: movy.graphic.SpritePool,
     points_pool: movy.graphic.SpritePool,
     active_props: [MaxProps]Prop,
+    rng: std.Random.DefaultPrng,
 
     pub const MaxProps = 32;
 
@@ -147,6 +148,7 @@ pub const PropsManager = struct {
             .shield_pool = movy.graphic.SpritePool.init(allocator),
             .points_pool = movy.graphic.SpritePool.init(allocator),
             .active_props = [_]Prop{.{ .active = false }} ** MaxProps,
+            .rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp())),
         };
 
         try self.initSprites(allocator);
@@ -236,8 +238,13 @@ pub const PropsManager = struct {
                     .y = y_h * 2,
                     .active = true,
                     .kind = kind,
-                    .speed = SPEED_Y,
-                    .speed_ctr = 0,
+                    .speed_adder = self.rng.random().intRangeAtMost(
+                        usize,
+                        25,
+                        30,
+                    ),
+                    .speed_threshold = 100,
+                    .speed_value = 0,
                     .collected = false,
                     .value = value,
                 };

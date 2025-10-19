@@ -19,17 +19,19 @@ pub const Obstacle = struct {
     y: i32 = 0,
     kind: ObstacleType = .AsteroidSmall,
     active: bool = false,
-    speed: usize = 0,
-    speed_ctr: usize = 0,
     score: u32 = 0, // value when destroyed
 
+    speed_adder: usize = 0,
+    speed_value: usize = 0,
+    speed_threshold: usize = 0,
+
     pub fn update(self: *Obstacle) void {
-        if (self.speed_ctr > 0) {
-            self.speed_ctr -= 1;
-            return;
+        self.speed_value += self.speed_adder;
+        if (self.speed_value >= self.speed_threshold) {
+            self.speed_value -= self.speed_threshold;
+            self.y += 1; // move downward
         }
-        self.speed_ctr = self.speed;
-        self.y += 1; // move downward
+
         self.sprite.stepActiveAnimation();
         self.sprite.setXY(self.x, self.y);
 
@@ -176,11 +178,17 @@ pub const ObstacleManager = struct {
             .AsteroidHuge => self.asteroids_huge_pool.get(),
         } orelse return;
 
-        const speed: usize = switch (kind) {
-            .AsteroidSmall => 0,
-            .AsteroidBig => 1,
-            .AsteroidBig2 => 2,
-            .AsteroidHuge => 2,
+        const min_speed: usize = switch (kind) {
+            .AsteroidSmall => 20,
+            .AsteroidBig => 20,
+            .AsteroidBig2 => 20,
+            .AsteroidHuge => 15,
+        };
+        const max_speed: usize = switch (kind) {
+            .AsteroidSmall => 30,
+            .AsteroidBig => 25,
+            .AsteroidBig2 => 25,
+            .AsteroidHuge => 25,
         };
 
         const spritepool: *movy.graphic.SpritePool = switch (kind) {
@@ -217,8 +225,15 @@ pub const ObstacleManager = struct {
                     .y = y,
                     .active = true,
                     .kind = kind,
-                    .speed = speed,
-                    .speed_ctr = 0,
+
+                    .speed_adder = self.rng.random().intRangeAtMost(
+                        usize,
+                        min_speed,
+                        max_speed,
+                    ),
+                    .speed_threshold = 100,
+                    .speed_value = 0,
+
                     .damage = 0,
                     .damage_threshold = damage_thr,
                     .score = score,

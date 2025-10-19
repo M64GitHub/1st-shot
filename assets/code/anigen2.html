@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Prop Background Generator</title>
+	<style>
+		body {
+			font-family: 'Courier New', monospace;
+			background: #1a1a1a;
+			color: #0f0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			margin: 0;
+			padding: 20px;
+		}
+
+		.container {
+			background: #2a2a2a;
+			padding: 30px;
+			border-radius: 10px;
+			border: 2px solid #0f0;
+			max-width: 800px;
+		}
+
+		h1 {
+			text-align: center;
+			color: #0f0;
+			text-shadow: 0 0 10px #0f0;
+		}
+
+		.canvas-container {
+			display: flex;
+			gap: 30px;
+			justify-content: center;
+			margin: 20px 0;
+			flex-wrap: wrap;
+		}
+
+		.canvas-wrapper {
+			text-align: center;
+		}
+
+		canvas {
+			border: 2px solid #0f0;
+			image-rendering: pixelated;
+			image-rendering: crisp-edges;
+			background: #000;
+		}
+
+		.controls {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 15px;
+			margin: 20px 0;
+		}
+
+		.control-group {
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+		}
+
+		label {
+			color: #0f0;
+			font-weight: bold;
+		}
+
+		input[type="color"],
+		input[type="range"],
+		select {
+			width: 100%;
+			padding: 5px;
+			background: #1a1a1a;
+			border: 1px solid #0f0;
+			color: #0f0;
+		}
+
+		button {
+			background: #0f0;
+			color: #000;
+			border: none;
+			padding: 12px 24px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+			border-radius: 5px;
+			margin: 5px;
+			font-family: 'Courier New', monospace;
+		}
+
+		button:hover {
+			background: #0c0;
+			box-shadow: 0 0 15px #0f0;
+		}
+
+		.button-group {
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
+			margin-top: 20px;
+		}
+
+		.info {
+			background: #1a1a1a;
+			padding: 10px;
+			border-radius: 5px;
+			margin-top: 10px;
+			font-size: 12px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<h1>🎮 Prop Background Generator 🎮</h1>
+		<div class="canvas-container">
+			<div class="canvas-wrapper">
+				<h3>Actual Size (<span id="actualSize">12x6</span>)</h3>
+				<canvas id="canvas" width="12" height="6"></canvas>
+			</div>
+			<div class="canvas-wrapper">
+				<h3>Preview (Zoomed <span id="zoomDisplay">20</span>x)</h3>
+				<canvas id="preview" width="240" height="120"></canvas>
+			</div>
+		</div>
+		<div class="controls">
+			<div class="control-group">
+				<label for="width">Width: <span id="widthValue">12</span>px</label>
+				<input type="range" id="width" min="1" max="64" value="12">
+			</div>
+			<div class="control-group">
+				<label for="height">Height: <span id="heightValue">6</span>px</label>
+				<input type="range" id="height" min="1" max="64" value="6">
+			</div>
+			<div class="control-group">
+				<label for="borderRadius">Border Radius: <span id="borderRadiusValue">0</span>px</label>
+				<input type="range" id="borderRadius" min="0" max="32" value="0">
+			</div>
+			<div class="control-group">
+				<label for="frames">Animation Frames: <span id="framesValue">1</span></label>
+				<input type="range" id="frames" min="1" max="32" value="1">
+			</div>
+			<div class="control-group">
+				<label for="animEffect">Animation Effect:</label>
+				<select id="animEffect">
+					<option value="none">None</option>
+					<option value="brightenInside">Brighten Inside</option>
+					<option value="darkenInside">Darken Inside</option>
+					<option value="brightenHighlights">Brighten Highlights (uses Param 2)</option>
+					<option value="brightenAll">Brighten All (Border + Inside)</option>
+					<option value="rotateHue">Rotate Hue</option>
+					<option value="pulseBorder">Pulse Border</option>
+					<option value="wave">Wave Across</option>
+				</select>
+			</div>
+			<div class="control-group">
+				<label for="animIntensity">Effect Intensity: <span
+						id="animIntensityValue">1.5</span></label>
+				<input type="range" id="animIntensity" min="1.0" max="10.0" step="0.1" value="1.5">
+			</div>
+			<div class="control-group">
+				<label for="animParam2">Parameter 2: <span id="animParam2Value">0.50</span></label>
+				<input type="range" id="animParam2" min="0.0" max="1.0" step="0.05" value="0.5">
+			</div>
+			<div class="control-group">
+				<label for="zoom">Preview Zoom:</label>
+				<select id="zoom">
+					<option value="5">5x</option>
+					<option value="10">10x</option>
+					<option value="20" selected>20x</option>
+					<option value="30">30x</option>
+					<option value="40">40x</option>
+				</select>
+			</div>
+			<div class="control-group">
+				<label for="baseColor">Base Color:</label>
+				<input type="color" id="baseColor" value="#2a5a2a">
+			</div>
+			<div class="control-group">
+				<label for="accentColor">Accent Color:</label>
+				<input type="color" id="accentColor" value="#3a7a3a">
+			</div>
+			<div class="control-group">
+				<label for="pattern">Pattern:</label>
+				<select id="pattern">
+					<option value="noise">Noise</option>
+					<option value="gradient">Gradient (Left-Right)</option>
+					<option value="gradientVertical">Gradient (Top-Bottom)</option>
+					<option value="gradientDual">Dual Gradient</option>
+					<option value="gradientRadial">Radial (Out)</option>
+					<option value="gradientRadialIn">Radial (In)</option>
+					<option value="gradientCorners">Four Corners</option>
+					<option value="border">Border</option>
+					<option value="borderDouble">Double Border</option>
+					<option value="diagonal">Diagonal</option>
+					<option value="crosshatch">Crosshatch</option>
+					<option value="circuit">Circuit</option>
+					<option value="plasma">Plasma</option>
+					<option value="scanlines">Scanlines</option>
+					<option value="perlin">Perlin</option>
+					<option value="waves">Waves</option>
+					<option value="spiral">Spiral</option>
+					<option value="target">Target</option>
+					<option value="diamonds">Diamonds</option>
+					<option value="hexagons">Hexagons</option>
+					<option value="sparkle">Sparkle</option>
+					<option value="fire">Fire</option>
+					<option value="water">Water</option>
+					<option value="matrix">Matrix</option>
+					<option value="marble">Marble</option>
+				</select>
+			</div>
+			<div class="control-group">
+				<label for="variance">Variance: <span id="varianceValue">30</span></label>
+				<input type="range" id="variance" min="0" max="100" value="30">
+			</div>
+		</div>
+		<div class="button-group">
+			<button onclick="generateBackground()">🔄 Regenerate</button>
+			<button onclick="document.getElementById('fileInput').click()">📂 Load PNG</button>
+			<button onclick="unloadPNG()">🗑️ Unload PNG</button>
+			<button onclick="downloadPNG('dropstacle_')">💾 Download DropStacle</button>
+			<button onclick="downloadPNG('prop_')">💾 Download Prop</button>
+		</div>
+		<input type="file" id="fileInput" accept="image/png" style="display:none" onchange="loadPNG(event)">
+		<div class="info">
+			<strong>Instructions:</strong> Adjust colors and pattern, then download. Border Radius creates
+			rounded shapes with transparent corners!
+			<br><strong>Tip:</strong> "Brighten Highlights" uses Parameter 2 as threshold (0.0=darks,
+			1.0=brights).
+			<br><strong id="loadStatus"></strong>
+		</div>
+	</div>
+	<script>
+		const canvas = document.getElementById('canvas');
+		const preview = document.getElementById('preview');
+		const ctx = canvas.getContext('2d');
+		const previewCtx = preview.getContext('2d');
+		let loadedImageData = null;
+		let loadedImageWidth = 0;
+		let loadedImageHeight = 0;
+
+		function hexToRgb(h) {
+			const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);
+			return r ? {r: parseInt(r[1], 16), g: parseInt(r[2], 16), b: parseInt(r[3], 16)} : null;
+		}
+
+		function varyColor(c, v) {
+			const a = v / 100 * 50;
+			return {
+				r: Math.max(0, Math.min(255, c.r + (Math.random() - .5) * a)),
+				g: Math.max(0, Math.min(255, c.g + (Math.random() - .5) * a)),
+				b: Math.max(0, Math.min(255, c.b + (Math.random() - .5) * a))
+			};
+		}
+
+		function updateCanvasSize() {
+			const w = loadedImageData ? loadedImageWidth : parseInt(document.getElementById('width').value);
+			const h = loadedImageData ? loadedImageHeight : parseInt(document.getElementById('height').value);
+			const z = parseInt(document.getElementById('zoom').value);
+			const r = parseInt(document.getElementById('borderRadius').value);
+			const f = parseInt(document.getElementById('frames').value);
+
+			canvas.width = w * f;
+			canvas.height = h;
+			preview.width = w * z;
+			preview.height = h * z;
+
+			if (!loadedImageData) {
+				document.getElementById('widthValue').textContent = w;
+				document.getElementById('heightValue').textContent = h;
+			}
+			document.getElementById('borderRadiusValue').textContent = r;
+			document.getElementById('framesValue').textContent = f;
+			document.getElementById('actualSize').textContent = f > 1 ? `${w}x${h} (${f} frames, ${w * f}px wide)` : `${w}x${h}`;
+			document.getElementById('zoomDisplay').textContent = z;
+
+			generateBackground();
+		}
+
+		function isOnBorder(x, y, w, h, r) {
+			if (r === 0) return x === 0 || x === w - 1 || y === 0 || y === h - 1;
+			const e = x === 0 || x === w - 1 || y === 0 || y === h - 1;
+			const tl = x < r && y < r;
+			const tr = x >= w - r && y < r;
+			const bl = x < r && y >= h - r;
+			const br = x >= w - r && y >= h - r;
+
+			if (tl) {
+				const dx = r - x, dy = r - y, d = Math.sqrt(dx * dx + dy * dy);
+				return d >= r - 1 && d <= r;
+			}
+			if (tr) {
+				const dx = x - (w - r - 1), dy = r - y, d = Math.sqrt(dx * dx + dy * dy);
+				return d >= r - 1 && d <= r;
+			}
+			if (bl) {
+				const dx = r - x, dy = y - (h - r - 1), d = Math.sqrt(dx * dx + dy * dy);
+				return d >= r - 1 && d <= r;
+			}
+			if (br) {
+				const dx = x - (w - r - 1), dy = y - (h - r - 1), d = Math.sqrt(dx * dx + dy * dy);
+				return d >= r - 1 && d <= r;
+			}
+			return e;
+		}
+
+		function rgbToHsl(r, g, b) {
+			r /= 255; g /= 255; b /= 255;
+			const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+			let h, s, l = (mx + mn) / 2;
+			if (mx === mn) {
+				h = s = 0;
+			} else {
+				const d = mx - mn;
+				s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn);
+				switch (mx) {
+					case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+					case g: h = ((b - r) / d + 2) / 6; break;
+					case b: h = ((r - g) / d + 4) / 6; break;
+				}
+			}
+			return [h, s, l];
+		}
+
+		function hslToRgb(h, s, l) {
+			let r, g, b;
+			if (s === 0) {
+				r = g = b = l;
+			} else {
+				const h2r = (p, q, t) => {
+					if (t < 0) t += 1;
+					if (t > 1) t -= 1;
+					if (t < 1 / 6) return p + (q - p) * 6 * t;
+					if (t < 1 / 2) return q;
+					if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+					return p;
+				};
+				const q = l < .5 ? l * (1 + s) : l + s - l * s;
+				const p = 2 * l - q;
+				r = h2r(p, q, h + 1 / 3);
+				g = h2r(p, q, h);
+				b = h2r(p, q, h - 1 / 3);
+			}
+			return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+		}
+
+		function applyAnimationEffect(c, fi, tf, e, i, p2, x, y, w, h) {
+			if (tf === 1 || e === 'none') return c;
+			const mf = (tf - 1) / 2;
+			let pr = fi <= mf ? fi / mf : (tf - 1 - fi) / mf;
+			const f = 1 + (i - 1) * pr;
+
+			switch (e) {
+				case 'brightenInside':
+					return {r: Math.min(255, c.r * f), g: Math.min(255, c.g * f), b: Math.min(255, c.b * f)};
+				case 'darkenInside':
+					const df = 1 / f;
+					return {r: c.r * df, g: c.g * df, b: c.b * df};
+				case 'brightenHighlights':
+					const l = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+					if (l > p2) return {r: Math.min(255, c.r * f), g: Math.min(255, c.g * f), b: Math.min(255, c.b * f)};
+					return c;
+				case 'rotateHue':
+					const hs = rgbToHsl(c.r, c.g, c.b);
+					hs[0] = (hs[0] + pr * .5) % 1;
+					const rg = hslToRgb(hs[0], hs[1], hs[2]);
+					return {r: rg[0], g: rg[1], b: rg[2]};
+				case 'pulseBorder':
+					return c;
+				case 'wave':
+					const wp = (x / w + pr) % 1;
+					const wf = 1 + (i - 1) * Math.sin(wp * Math.PI * 2);
+					return {r: Math.min(255, c.r * wf), g: Math.min(255, c.g * wf), b: Math.min(255, c.b * wf)};
+				default:
+					return c;
+			}
+		}
+
+		function isInsideRoundedRect(x, y, w, h, r) {
+			if (r === 0) return true;
+			if (x >= r && x < w - r) return true;
+			if (y >= r && y < h - r) return true;
+
+			if (x < r && y < r) {
+				const dx = r - x, dy = r - y;
+				return dx * dx + dy * dy <= r * r;
+			}
+			if (x >= w - r && y < r) {
+				const dx = x - (w - r - 1), dy = r - y;
+				return dx * dx + dy * dy <= r * r;
+			}
+			if (x < r && y >= h - r) {
+				const dx = r - x, dy = y - (h - r - 1);
+				return dx * dx + dy * dy <= r * r;
+			}
+			if (x >= w - r && y >= h - r) {
+				const dx = x - (w - r - 1), dy = y - (h - r - 1);
+				return dx * dx + dy * dy <= r * r;
+			}
+			return true;
+		}
+
+		function getPatternColor(x, y, w, h, bc, ac, v, p) {
+			let c;
+			switch (p) {
+				case 'gradient':
+					const t = x / (w - 1);
+					c = {r: bc.r + (ac.r - bc.r) * t, g: bc.g + (ac.g - bc.g) * t, b: bc.b + (ac.b - bc.b) * t};
+					return varyColor(c, v / 2);
+				case 'gradientVertical':
+					const tv = y / (h - 1);
+					c = {r: bc.r + (ac.r - bc.r) * tv, g: bc.g + (ac.g - bc.g) * tv, b: bc.b + (ac.b - bc.b) * tv};
+					return varyColor(c, v / 2);
+				case 'gradientDual':
+					const cx = (w - 1) / 2, df = Math.abs(x - cx) / cx;
+					c = {r: ac.r + (bc.r - ac.r) * (1 - df), g: ac.g + (bc.g - ac.g) * (1 - df), b: ac.b + (bc.b - ac.b) * (1 - df)};
+					return varyColor(c, v / 2);
+				case 'gradientRadial':
+					const cxr = (w - 1) / 2, cyr = (h - 1) / 2, md = Math.sqrt(cxr * cxr + cyr * cyr);
+					const d = Math.sqrt((x - cxr) * (x - cxr) + (y - cyr) * (y - cyr)), tr = Math.min(1, d / md);
+					c = {r: bc.r + (ac.r - bc.r) * tr, g: bc.g + (ac.g - bc.g) * tr, b: bc.b + (ac.b - bc.b) * tr};
+					return varyColor(c, v / 3);
+				case 'gradientRadialIn':
+					const cxi = (w - 1) / 2, cyi = (h - 1) / 2, mdi = Math.sqrt(cxi * cxi + cyi * cyi);
+					const di = Math.sqrt((x - cxi) * (x - cxi) + (y - cyi) * (y - cyi)), tri = 1 - Math.min(1, di / mdi);
+					c = {r: bc.r + (ac.r - bc.r) * tri, g: bc.g + (ac.g - bc.g) * tri, b: bc.b + (ac.b - bc.b) * tri};
+					return varyColor(c, v / 3);
+				case 'gradientCorners':
+					const tlw = (1 - x / (w - 1)) * (1 - y / (h - 1));
+					const trw = (x / (w - 1)) * (1 - y / (h - 1));
+					const blw = (1 - x / (w - 1)) * (y / (h - 1));
+					const brw = (x / (w - 1)) * (y / (h - 1));
+					c = {
+						r: bc.r * tlw + ac.r * trw + bc.r * blw + ac.r * brw,
+						g: bc.g * tlw + ac.g * trw + bc.g * blw + ac.g * brw,
+						b: bc.b * tlw + ac.b * trw + bc.b * blw + ac.b * brw
+					};
+					return varyColor(c, v / 2);
+				case 'border':
+					return (x === 0 || x === w - 1 || y === 0 || y === h - 1) ? varyColor(ac, v / 2) : varyColor(bc, v);
+				case 'borderDouble':
+					return (x === 0 || x === w - 1 || y === 0 || y === h - 1 || x === 1 || x === w - 2 || y === 1 || y === h - 2) ? varyColor(ac, v / 2) : varyColor(bc, v);
+				case 'diagonal':
+					return ((x + y) % 3 === 0) ? varyColor(ac, v) : varyColor(bc, v);
+				case 'crosshatch':
+					return (x % 2 === 0 || y % 2 === 0) ? varyColor(ac, v) : varyColor(bc, v);
+				case 'circuit':
+					const ls = Math.max(3, Math.floor(w / 4));
+					return (x % ls === 0 || y % Math.max(2, Math.floor(h / 3)) === 0 || (x % Math.max(4, ls + 1) === 0 && y % 3 === 0)) ? varyColor(ac, v / 2) : varyColor(bc, v);
+				case 'plasma':
+					const sx = .5 * (12 / w), sy = .8 * (6 / h);
+					const pl = Math.sin(x * sx) * .5 + Math.sin(y * sy) * .5 + Math.sin((x + y) * .4 * (12 / w)) * .5;
+					const tp = (pl + 1.5) / 3;
+					c = {r: bc.r + (ac.r - bc.r) * tp, g: bc.g + (ac.g - bc.g) * tp, b: bc.b + (ac.b - bc.b) * tp};
+					return varyColor(c, v / 4);
+				case 'scanlines':
+					return (y % 2 === 0) ? varyColor(bc, v) : varyColor(ac, v);
+				case 'perlin':
+					const f1 = .1, f2 = .05, f3 = .2;
+					const pe = Math.sin(x * f1) * Math.cos(y * f1) * .5 + Math.sin(x * f2 + y * f2) * .3 + Math.sin(x * f3 - y * f3) * .2;
+					const tpe = (pe + 1) / 2;
+					return {r: bc.r + (ac.r - bc.r) * tpe, g: bc.g + (ac.g - bc.g) * tpe, b: bc.b + (ac.b - bc.b) * tpe};
+				case 'waves':
+					const wv = Math.sin(x * .5) + Math.sin(y * .3), twv = (wv + 2) / 4;
+					c = {r: bc.r + (ac.r - bc.r) * twv, g: bc.g + (ac.g - bc.g) * twv, b: bc.b + (ac.b - bc.b) * twv};
+					return varyColor(c, v / 3);
+				case 'spiral':
+					const dx = x - w / 2, dy = y - h / 2;
+					const an = Math.atan2(dy, dx), ra = Math.sqrt(dx * dx + dy * dy);
+					const sp = (an + ra * .3) % (Math.PI * 2), ts = sp / (Math.PI * 2);
+					return {r: bc.r + (ac.r - bc.r) * ts, g: bc.g + (ac.g - bc.g) * ts, b: bc.b + (ac.b - bc.b) * ts};
+				case 'target':
+					const cxt = w / 2, cyt = h / 2;
+					const dt = Math.sqrt((x - cxt) ** 2 + (y - cyt) ** 2), rn = Math.floor(dt) % 2;
+					return rn === 0 ? varyColor(bc, v) : varyColor(ac, v);
+				case 'diamonds':
+					const dm = (Math.abs(x - w / 2) + Math.abs(y - h / 2)) % 4;
+					return dm < 2 ? varyColor(bc, v) : varyColor(ac, v);
+				case 'hexagons':
+					const hs = 4, hx = Math.floor(x / hs), hy = Math.floor(y / hs), hp = (hx + hy) % 2;
+					return hp === 0 ? varyColor(bc, v) : varyColor(ac, v);
+				case 'sparkle':
+					const sc = ((x * 7919 + y * 6547) % 100) / 100;
+					return (sc > .92) ? varyColor(ac, v / 2) : varyColor(bc, v);
+				case 'fire':
+					const fb = 1 - (y / (h - 1)), fn = Math.sin(x * .8 + y * .3) * .3;
+					const tf = Math.max(0, Math.min(1, fb + fn));
+					c = {r: ac.r * tf + bc.r * (1 - tf), g: ac.g * tf * .7 + bc.g * (1 - tf), b: ac.b * tf * .3 + bc.b * (1 - tf)};
+					return varyColor(c, v / 2);
+				case 'water':
+					const cxw = w / 2, cyw = h / 2;
+					const dw = Math.sqrt((x - cxw) ** 2 + (y - cyw) ** 2), rp = Math.sin(dw * .8) * .5 + .5;
+					c = {r: bc.r + (ac.r - bc.r) * rp, g: bc.g + (ac.g - bc.g) * rp, b: bc.b + (ac.b - bc.b) * rp};
+					return varyColor(c, v / 3);
+				case 'matrix':
+					const cp = ((x * 31) % 100) / 100, rf = y / (h - 1);
+					return (cp > .7 && rf > Math.random()) ? varyColor(ac, v) : varyColor(bc, v * 2);
+				case 'marble':
+					const mb = x * .1 + Math.sin(x * .2 + y * .3) * 3 + Math.sin(x * .1 - y * .2) * 2 + Math.sin((x + y) * .15) * 1.5;
+					const tmb = (Math.sin(mb) + 1) / 2;
+					c = {r: bc.r + (ac.r - bc.r) * tmb, g: bc.g + (ac.g - bc.g) * tmb, b: bc.b + (ac.b - bc.b) * tmb};
+					return varyColor(c, v / 3);
+				default:
+					return Math.random() > .3 ? varyColor(bc, v) : varyColor(ac, v);
+			}
+		}
+
+		function generateBackground() {
+			const w = loadedImageData ? loadedImageWidth : parseInt(document.getElementById('width').value);
+			const h = loadedImageData ? loadedImageHeight : parseInt(document.getElementById('height').value);
+			const bc = hexToRgb(document.getElementById('baseColor').value);
+			const ac = hexToRgb(document.getElementById('accentColor').value);
+			const v = parseInt(document.getElementById('variance').value);
+			const p = document.getElementById('pattern').value;
+			const z = parseInt(document.getElementById('zoom').value);
+			const br = parseInt(document.getElementById('borderRadius').value);
+			const f = parseInt(document.getElementById('frames').value);
+			const ae = document.getElementById('animEffect').value;
+			const ai = parseFloat(document.getElementById('animIntensity').value);
+			const ap = parseFloat(document.getElementById('animParam2').value);
+			const tw = w * f;
+			const id = ctx.createImageData(tw, h);
+			const d = id.data;
+
+			for (let fi = 0; fi < f; fi++) {
+				const fo = fi * w;
+				for (let y = 0; y < h; y++) {
+					for (let x = 0; x < w; x++) {
+						const ax = fo + x;
+						const i = (y * tw + ax) * 4;
+						const ii = isInsideRoundedRect(x, y, w, h, br);
+
+						if (!ii) {
+							d[i] = 0;
+							d[i + 1] = 0;
+							d[i + 2] = 0;
+							d[i + 3] = 0;
+							continue;
+						}
+
+						const ib = isOnBorder(x, y, w, h, br);
+						let co;
+
+						if (loadedImageData) {
+							const srcIdx = (y * w + x) * 4;
+							co = {
+								r: loadedImageData.data[srcIdx],
+								g: loadedImageData.data[srcIdx + 1],
+								b: loadedImageData.data[srcIdx + 2]
+							};
+						} else {
+							co = getPatternColor(x, y, w, h, bc, ac, v, p);
+						}
+
+						if (f > 1 && ae !== 'none') {
+							if (ae === 'brightenAll') {
+								co = applyAnimationEffect(co, fi, f, 'brightenInside', ai, ap, x, y, w, h);
+							} else if (!ib) {
+								co = applyAnimationEffect(co, fi, f, ae, ai, ap, x, y, w, h);
+							} else if (ib && ae === 'pulseBorder') {
+								co = applyAnimationEffect(co, fi, f, 'brightenInside', ai, ap, x, y, w, h);
+							}
+						}
+
+						d[i] = Math.round(co.r);
+						d[i + 1] = Math.round(co.g);
+						d[i + 2] = Math.round(co.b);
+						d[i + 3] = 255;
+					}
+				}
+			}
+
+			ctx.putImageData(id, 0, 0);
+			previewCtx.imageSmoothingEnabled = false;
+			previewCtx.clearRect(0, 0, preview.width, preview.height);
+			previewCtx.drawImage(canvas, 0, 0, w, h, 0, 0, preview.width, preview.height);
+		}
+
+		function downloadPNG(n) {
+			const l = document.createElement('a');
+			l.download = `${n}.png`;
+			l.href = canvas.toDataURL('image/png');
+			l.click();
+		}
+
+		function loadPNG(event) {
+			const file = event.target.files[0];
+			if (!file) return;
+
+			const reader = new FileReader();
+			reader.onload = function (e) {
+				const img = new Image();
+				img.onload = function () {
+					loadedImageWidth = img.width;
+					loadedImageHeight = img.height;
+
+					const tempCanvas = document.createElement('canvas');
+					tempCanvas.width = img.width;
+					tempCanvas.height = img.height;
+					const tempCtx = tempCanvas.getContext('2d');
+					tempCtx.drawImage(img, 0, 0);
+					loadedImageData = tempCtx.getImageData(0, 0, img.width, img.height);
+
+					document.getElementById('width').value = img.width;
+					document.getElementById('height').value = img.height;
+					document.getElementById('widthValue').textContent = img.width;
+					document.getElementById('heightValue').textContent = img.height;
+					document.getElementById('width').disabled = true;
+					document.getElementById('height').disabled = true;
+					document.getElementById('loadStatus').textContent = `📂 PNG loaded: ${img.width}x${img.height} (Width/Height sliders disabled)`;
+					document.getElementById('loadStatus').style.color = '#0f0';
+
+					generateBackground();
+				};
+				img.src = e.target.result;
+			};
+			reader.readAsDataURL(file);
+		}
+
+		function unloadPNG() {
+			loadedImageData = null;
+			loadedImageWidth = 0;
+			loadedImageHeight = 0;
+			document.getElementById('width').disabled = false;
+			document.getElementById('height').disabled = false;
+			document.getElementById('fileInput').value = '';
+			document.getElementById('loadStatus').textContent = '';
+			generateBackground();
+		}
+
+		document.getElementById('variance').addEventListener('input', e => {
+			document.getElementById('varianceValue').textContent = e.target.value;
+			generateBackground();
+		});
+		document.getElementById('animIntensity').addEventListener('input', e => {
+			document.getElementById('animIntensityValue').textContent = parseFloat(e.target.value).toFixed(1);
+			generateBackground();
+		});
+		document.getElementById('animParam2').addEventListener('input', e => {
+			document.getElementById('animParam2Value').textContent = parseFloat(e.target.value).toFixed(2);
+			generateBackground();
+		});
+		document.getElementById('width').addEventListener('input', updateCanvasSize);
+		document.getElementById('height').addEventListener('input', updateCanvasSize);
+		document.getElementById('zoom').addEventListener('change', updateCanvasSize);
+		document.getElementById('borderRadius').addEventListener('input', updateCanvasSize);
+		document.getElementById('frames').addEventListener('input', updateCanvasSize);
+		document.querySelectorAll('input[type="color"],select#pattern,select#animEffect').forEach(e => e.addEventListener('change', generateBackground));
+
+		generateBackground();
+	</script>
+</body>
+
+</html>

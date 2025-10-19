@@ -1,6 +1,7 @@
 const std = @import("std");
 const movy = @import("movy");
 const PlayerShip = @import("PlayerShip.zig").PlayerShip;
+const WeaponManager = @import("WeaponManager.zig").WeaponManager;
 const ShieldManager = @import("ShieldManager.zig").ShieldManager;
 const GameStateManager = @import("GameStateManager.zig").GameStateManager;
 const ExplosionManager = @import("ExplosionManager.zig").ExplosionManager;
@@ -12,7 +13,7 @@ const StatusWindow = @import("StatusWindow.zig").StatusWindow;
 const Starfield = @import("Starfield.zig").Starfield;
 const PropsManager = @import("PropsManager.zig").PropsManager;
 const Prop = @import("PropsManager.zig").Prop;
-const WeaponManager = @import("WeaponManager.zig").WeaponManager;
+const DropStacleManager = @import("DropStacleManager.zig").DropStacleManager;
 
 const Lives = 3;
 
@@ -27,6 +28,7 @@ pub const GameManager = struct {
     statuswin: StatusWindow,
     starfield: *Starfield,
     props: *PropsManager,
+    dropstacles: *DropStacleManager,
     screen: *movy.Screen,
     frame_counter: usize = 0,
 
@@ -53,6 +55,7 @@ pub const GameManager = struct {
             .vismanager = VisualsManager.init(allocator, screen),
             .exploder = try ExplosionManager.init(allocator, screen),
             .obstacles = try ObstacleManager.init(allocator, screen),
+            .dropstacles = try DropStacleManager.init(allocator, screen),
             .shields = try ShieldManager.init(allocator, screen),
             .screen = screen,
         };
@@ -64,6 +67,7 @@ pub const GameManager = struct {
         self.obstacles.deinit(allocator);
         self.starfield.deinit(allocator);
         self.props.deinit(allocator);
+        self.dropstacles.deinit(allocator);
     }
 
     pub fn onKeyDown(self: *GameManager, key: movy.input.Key) void {
@@ -143,6 +147,7 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 self.starfield.update();
                 try self.props.update();
+                try self.dropstacles.update();
                 // maybe animate screen brightness here
             },
             .StartingInvincible, .AlmostVulnerable, .Playing => {
@@ -166,6 +171,7 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 self.starfield.update();
                 try self.props.update();
+                try self.dropstacles.update();
                 self.doShipCollision();
                 self.doProjectileCollisions();
                 self.handlePropCollision();
@@ -181,6 +187,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
@@ -195,6 +202,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
@@ -220,6 +228,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
@@ -228,6 +237,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
@@ -272,6 +282,7 @@ pub const GameManager = struct {
         try self.player.weapon_manager.addRenderSurfaces();
         try self.shields.addRenderSurfaces();
         try self.props.addRenderSurfaces();
+        try self.dropstacles.addRenderSurfaces();
         try self.obstacles.addRenderSurfaces();
 
         try self.screen.addRenderSurface(self.starfield.out_surface);
