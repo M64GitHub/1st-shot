@@ -88,6 +88,7 @@ pub const Starfield = struct {
     }
 
     pub fn deinit(self: *Starfield, allocator: std.mem.Allocator) void {
+        self.out_surface.deinit(allocator);
         allocator.destroy(self);
     }
 
