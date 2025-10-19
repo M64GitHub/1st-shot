@@ -5,6 +5,8 @@ const Sprite = movy.graphic.Sprite;
 pub const ExplosionType = enum {
     Small,
     SmallPurple,
+    SmallCyan,
+    SmallGreen,
     Big,
     BigBlu,
     Huge,
@@ -44,6 +46,8 @@ pub const ExplosionManager = struct {
     screen: *movy.Screen,
     small_pool: movy.graphic.SpritePool,
     small_purple_pool: movy.graphic.SpritePool,
+    small_cyan_pool: movy.graphic.SpritePool,
+    small_green_pool: movy.graphic.SpritePool,
     big_pool: movy.graphic.SpritePool,
     big_blu_pool: movy.graphic.SpritePool,
     huge_pool: movy.graphic.SpritePool,
@@ -61,6 +65,8 @@ pub const ExplosionManager = struct {
             .screen = screen,
             .small_pool = movy.graphic.SpritePool.init(allocator),
             .small_purple_pool = movy.graphic.SpritePool.init(allocator),
+            .small_cyan_pool = movy.graphic.SpritePool.init(allocator),
+            .small_green_pool = movy.graphic.SpritePool.init(allocator),
             .big_pool = movy.graphic.SpritePool.init(allocator),
             .big_blu_pool = movy.graphic.SpritePool.init(allocator),
             .huge_pool = movy.graphic.SpritePool.init(allocator),
@@ -78,8 +84,9 @@ pub const ExplosionManager = struct {
         allocator: std.mem.Allocator,
     ) !void {
         const small_path = "assets/explosion_small.png";
-        const small_purple_path =
-            "assets/explosion_small_purple.png";
+        const small_purple_path = "assets/explosion_small_purple.png";
+        const small_cyan_path = "assets/explosion_small_cyan.png";
+        const small_green_path = "assets/explosion_small_green.png";
         const big_path = "assets/explosion_big.png";
         const big_blu_path = "assets/explosion_big_ship.png";
         const huge_path = "assets/explosion_huge.png";
@@ -116,6 +123,34 @@ pub const ExplosionManager = struct {
                 Sprite.FrameAnimation.init(1, small_frames, .once, 1),
             );
             try self.small_purple_pool.addSprite(s);
+
+            // small
+            s = try Sprite.initFromPng(
+                allocator,
+                small_cyan_path,
+                "small_explosion_cyan",
+            );
+            try s.splitByWidth(allocator, 16);
+            try s.addAnimation(
+                allocator,
+                "explode",
+                Sprite.FrameAnimation.init(1, small_frames, .once, 1),
+            );
+            try self.small_cyan_pool.addSprite(s);
+
+            // small
+            s = try Sprite.initFromPng(
+                allocator,
+                small_green_path,
+                "small_explosion_green",
+            );
+            try s.splitByWidth(allocator, 16);
+            try s.addAnimation(
+                allocator,
+                "explode",
+                Sprite.FrameAnimation.init(1, small_frames, .once, 1),
+            );
+            try self.small_green_pool.addSprite(s);
 
             // big
             var b = try Sprite.initFromPng(
@@ -185,6 +220,8 @@ pub const ExplosionManager = struct {
         const sprite = switch (kind) {
             .Small => self.small_pool.get(),
             .SmallPurple => self.small_purple_pool.get(),
+            .SmallCyan => self.small_cyan_pool.get(),
+            .SmallGreen => self.small_green_pool.get(),
             .Big => self.big_pool.get(),
             .BigBlu => self.big_blu_pool.get(),
             .Huge => self.huge_pool.get(),
@@ -244,6 +281,12 @@ pub const ExplosionManager = struct {
                         .SmallPurple => self.small_purple_pool.release(
                             exp.sprite,
                         ),
+                        .SmallCyan => self.small_cyan_pool.release(
+                            exp.sprite,
+                        ),
+                        .SmallGreen => self.small_green_pool.release(
+                            exp.sprite,
+                        ),
                         .Big => self.big_pool.release(exp.sprite),
                         .BigBlu => self.big_blu_pool.release(exp.sprite),
                         .Huge => self.huge_pool.release(exp.sprite),
@@ -272,6 +315,8 @@ pub const ExplosionManager = struct {
     pub fn deinit(self: *ExplosionManager, allocator: std.mem.Allocator) void {
         self.small_pool.deinit(allocator);
         self.small_purple_pool.deinit(allocator);
+        self.small_cyan_pool.deinit(allocator);
+        self.small_green_pool.deinit(allocator);
         self.big_pool.deinit(allocator);
         self.big_blu_pool.deinit(allocator);
         self.huge_pool.deinit(allocator);

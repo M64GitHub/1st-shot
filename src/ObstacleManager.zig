@@ -21,6 +21,7 @@ pub const Obstacle = struct {
     active: bool = false,
     speed: usize = 0,
     speed_ctr: usize = 0,
+    score: u32 = 0, // value when destroyed
 
     pub fn update(self: *Obstacle) void {
         if (self.speed_ctr > 0) {
@@ -196,6 +197,13 @@ pub const ObstacleManager = struct {
             .AsteroidHuge => 15,
         };
 
+        const score: u32 = switch (kind) {
+            .AsteroidSmall => 50,
+            .AsteroidBig => 100,
+            .AsteroidBig2 => 200,
+            .AsteroidHuge => 250,
+        };
+
         try sprite.startAnimation("rotate");
         sprite.setXY(x, y);
 
@@ -213,6 +221,7 @@ pub const ObstacleManager = struct {
                     .speed_ctr = 0,
                     .damage = 0,
                     .damage_threshold = damage_thr,
+                    .score = score,
                 };
                 break;
             }
