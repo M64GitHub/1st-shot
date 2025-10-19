@@ -17,9 +17,14 @@ pub const PlayerShip = struct {
     message: ?[]const u8 = null,
     health_mode: HealthMode = .Vulnerable,
 
-    //
     lives: usize = 0,
     damage: usize = 0,
+
+    score: usize = 0,
+
+    last_ammo_milestone: usize = 0,
+    last_shield_milestone: usize = 0,
+    last_life_milestone: usize = 0,
 
     pub const HealthMode = enum {
         Vulnerable,
@@ -212,12 +217,13 @@ pub const PlayerShip = struct {
 
         self.message = try std.fmt.bufPrint(
             &self.msgbuf,
-            "Player movement state: {s:>10} | Weapon: {s:>10} | Ammo: {d:>4} | Lives: {d}",
+            "Player movement state: {s:>10} | Weapon: {s:>10} | Ammo: {d:>4} | Lives: {d} | Score: {d:>6}",
             .{
                 ani_or_fired,
                 self.weapon_manager.getWeaponName(),
                 self.weapon_manager.getAmmo(),
                 self.lives,
+                self.score,
             },
         );
     }

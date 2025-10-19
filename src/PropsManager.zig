@@ -2,6 +2,9 @@ const std = @import("std");
 const movy = @import("movy");
 const Sprite = movy.graphic.Sprite;
 
+const SPEED_Y = 3;
+const MOV_Y = 2;
+
 pub const PropType = enum {
     AmmoBonus,
     ExtraLife,
@@ -17,9 +20,75 @@ pub const Prop = struct {
     y: i32 = 0,
     kind: PropType = .AmmoBonus,
     active: bool = false,
-    speed: usize = 2,
+    speed: usize = SPEED_Y,
     speed_ctr: usize = 0,
     collected: bool = false,
+    value: u32 = 0, // For points and ammo amounts
+
+    pub fn draw(self: *Prop) void {
+        const surface = self.sprite.getCurrentFrameSurface() catch return;
+
+        // Calculate available text lines (half of pixel height)
+        const text_lines = surface.h / 2;
+        if (text_lines < 2) return; // Need at least 2 lines
+
+        // Prepare the text based on prop type
+        var value_buf: [16]u8 = undefined;
+
+        const label: []const u8 = switch (self.kind) {
+            .ExtraLife => "LIVE",
+            .PointsBonus => "BONUS",
+            .ShieldBonus => "SHIELD",
+            .AmmoBonus => "AMMO",
+        };
+
+        const value_text: []const u8 = switch (self.kind) {
+            .ExtraLife => "+1",
+            .ShieldBonus => "",
+            .PointsBonus => blk: {
+                break :blk std.fmt.bufPrint(
+                    &value_buf,
+                    "+{d}",
+                    .{self.value},
+                ) catch "+???";
+            },
+            .AmmoBonus => blk: {
+                break :blk std.fmt.bufPrint(
+                    &value_buf,
+                    "+{d}",
+                    .{self.value},
+                ) catch "+???";
+            },
+        };
+
+        // Calculate centered positions
+        const label_x = (surface.w -| label.len) / 2;
+        const value_x = (surface.w -| value_text.len) / 2;
+
+        // Calculate Y positions (centered vertically, accounting for half-height)
+        // We want to center 2 lines of text in the available space
+        const center_line = text_lines / 2;
+        const label_y = if (center_line > 0) (center_line - 1) * 2 else 0;
+        const value_y = label_y + 1;
+
+        // Draw the label on the first line
+        _ = surface.putStrXY(
+            label,
+            label_x,
+            @intCast(label_y + 1),
+            movy.color.WHITE,
+            movy.color.DARKER_GRAY,
+        );
+
+        // Draw the value on the second line
+        _ = surface.putStrXY(
+            value_text,
+            value_x,
+            @intCast(value_y + 1),
+            movy.color.WHITE,
+            movy.color.DARKER_GRAY,
+        );
+    }
 
     pub fn update(self: *Prop) void {
         if (self.speed_ctr > 0) {
@@ -27,13 +96,11 @@ pub const Prop = struct {
             return;
         }
         self.speed_ctr = self.speed;
-        self.y += 1; // move downward
-        self.sprite.stepActiveAnimation();
+        self.y += MOV_Y; // move downward
         self.sprite.setXY(self.x, self.y);
 
         // Deactivate if off-screen
         if (self.y > @as(i32, @intCast(self.screen.h)) or
-            self.y < -@as(i32, @intCast(self.sprite.h)) or
             self.x > @as(i32, @intCast(self.screen.w)) or
             self.x < -@as(i32, @intCast(self.sprite.w)))
         {
@@ -66,12 +133,7 @@ pub const PropsManager = struct {
     points_pool: movy.graphic.SpritePool,
     active_props: [MaxProps]Prop,
 
-    // Auto spawn configuration
-    spawn_cooldown: usize = 0,
-    spawn_interval: usize = 600, // spawn every ~600 frames (10 seconds at 60fps)
-    rng: std.Random.DefaultPrng,
-
-    pub const MaxProps = 16;
+    pub const MaxProps = 32;
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -85,7 +147,6 @@ pub const PropsManager = struct {
             .shield_pool = movy.graphic.SpritePool.init(allocator),
             .points_pool = movy.graphic.SpritePool.init(allocator),
             .active_props = [_]Prop{.{ .active = false }} ** MaxProps,
-            .rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp())),
         };
 
         try self.initSprites(allocator);
@@ -106,12 +167,6 @@ pub const PropsManager = struct {
                 ammo_path,
                 "ammo_prop",
             );
-            try s.splitByWidth(allocator, 16); // Adjust size as needed
-            try s.addAnimation(
-                allocator,
-                "idle",
-                Sprite.FrameAnimation.init(1, 4, .loopForward, 2),
-            );
             try self.ammo_pool.addSprite(s);
 
             // Extra life sprite
@@ -119,12 +174,6 @@ pub const PropsManager = struct {
                 allocator,
                 life_path,
                 "life_prop",
-            );
-            try s.splitByWidth(allocator, 16);
-            try s.addAnimation(
-                allocator,
-                "idle",
-                Sprite.FrameAnimation.init(1, 4, .loopForward, 2),
             );
             try self.life_pool.addSprite(s);
 
@@ -134,12 +183,6 @@ pub const PropsManager = struct {
                 shield_path,
                 "shield_prop",
             );
-            try s.splitByWidth(allocator, 16);
-            try s.addAnimation(
-                allocator,
-                "idle",
-                Sprite.FrameAnimation.init(1, 4, .loopForward, 2),
-            );
             try self.shield_pool.addSprite(s);
 
             // Points bonus sprite
@@ -147,12 +190,6 @@ pub const PropsManager = struct {
                 allocator,
                 points_path,
                 "points_prop",
-            );
-            try s.splitByWidth(allocator, 16);
-            try s.addAnimation(
-                allocator,
-                "idle",
-                Sprite.FrameAnimation.init(1, 4, .loopForward, 2),
             );
             try self.points_pool.addSprite(s);
         }
@@ -163,13 +200,21 @@ pub const PropsManager = struct {
         x: i32,
         y: i32,
         kind: PropType,
-    ) !void {
+        value: u32,
+    ) !bool {
+        // Check if we've hit the max props limit
+        var count: usize = 0;
+        for (self.active_props) |prop| {
+            if (prop.active) count += 1;
+        }
+        if (count >= MaxProps) return false;
+
         const sprite = switch (kind) {
             .AmmoBonus => self.ammo_pool.get(),
             .ExtraLife => self.life_pool.get(),
             .ShieldBonus => self.shield_pool.get(),
             .PointsBonus => self.points_pool.get(),
-        } orelse return;
+        } orelse return false;
 
         const spritepool: *movy.graphic.SpritePool = switch (kind) {
             .AmmoBonus => &self.ammo_pool,
@@ -178,8 +223,8 @@ pub const PropsManager = struct {
             .PointsBonus => &self.points_pool,
         };
 
-        try sprite.startAnimation("idle");
-        sprite.setXY(x, y);
+        const y_h = @divTrunc(y, 2); // need to place on even y
+        sprite.setXY(x, y_h * 2);
 
         for (&self.active_props) |*prop| {
             if (!prop.active) {
@@ -188,51 +233,58 @@ pub const PropsManager = struct {
                     .sprite_pool = spritepool,
                     .screen = self.screen,
                     .x = x,
-                    .y = y,
+                    .y = y_h * 2,
                     .active = true,
                     .kind = kind,
-                    .speed = 2,
+                    .speed = SPEED_Y,
                     .speed_ctr = 0,
                     .collected = false,
+                    .value = value,
                 };
-                break;
+                prop.draw();
+                return true;
             }
         }
+        return false;
+    }
+
+    // Convenience functions for spawning specific prop types
+
+    pub fn spawnAmmoBonus(
+        self: *PropsManager,
+        x: i32,
+        y: i32,
+        ammo_amount: u32,
+    ) !bool {
+        return self.trySpawn(x, y, .AmmoBonus, ammo_amount);
+    }
+
+    pub fn spawnPointsBonus(
+        self: *PropsManager,
+        x: i32,
+        y: i32,
+        points_amount: u32,
+    ) !bool {
+        return self.trySpawn(x, y, .PointsBonus, points_amount);
+    }
+
+    pub fn spawnExtraLife(
+        self: *PropsManager,
+        x: i32,
+        y: i32,
+    ) !bool {
+        return self.trySpawn(x, y, .ExtraLife, 0);
+    }
+
+    pub fn spawnShieldBonus(
+        self: *PropsManager,
+        x: i32,
+        y: i32,
+    ) !bool {
+        return self.trySpawn(x, y, .ShieldBonus, 0);
     }
 
     pub fn update(self: *PropsManager) !void {
-        // Auto-spawn logic
-        if (self.spawn_cooldown == 0) {
-            // Count active props
-            var count: usize = 0;
-            for (self.active_props) |prop| {
-                if (prop.active) count += 1;
-            }
-
-            // Spawn a new prop if not too many active
-            if (count < 3) { // Max 3 props on screen at once
-                const rand_x: i32 = self.rng.random().intRangeAtMost(
-                    i32,
-                    16,
-                    @as(i32, @intCast(self.screen.w)) - 16,
-                );
-
-                // Weighted random prop type
-                const roll = self.rng.random().intRangeLessThan(u8, 0, 100);
-                const kind: PropType = switch (roll) {
-                    0...39 => PropType.AmmoBonus, // 40% chance
-                    40...59 => PropType.PointsBonus, // 20% chance
-                    60...79 => PropType.ShieldBonus, // 20% chance
-                    else => PropType.ExtraLife, // 20% chance
-                };
-
-                try self.trySpawn(rand_x, -16, kind);
-                self.spawn_cooldown = self.spawn_interval;
-            }
-        } else {
-            self.spawn_cooldown -= 1;
-        }
-
         // Update active props
         for (&self.active_props) |*prop| {
             if (prop.active) {

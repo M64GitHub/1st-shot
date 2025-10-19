@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Prop Background Generator</title>
+	<style>
+		body {
+			font-family: 'Courier New', monospace;
+			background: #1a1a1a;
+			color: #00ff00;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 100vh;
+			margin: 0;
+			padding: 20px;
+		}
+
+		.container {
+			background: #2a2a2a;
+			padding: 30px;
+			border-radius: 10px;
+			border: 2px solid #00ff00;
+			max-width: 800px;
+		}
+
+		h1 {
+			text-align: center;
+			color: #00ff00;
+			text-shadow: 0 0 10px #00ff00;
+		}
+
+		.canvas-container {
+			display: flex;
+			gap: 30px;
+			justify-content: center;
+			margin: 20px 0;
+			flex-wrap: wrap;
+		}
+
+		.canvas-wrapper {
+			text-align: center;
+		}
+
+		canvas {
+			border: 2px solid #00ff00;
+			image-rendering: pixelated;
+			image-rendering: crisp-edges;
+			background: #000;
+		}
+
+		.controls {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 15px;
+			margin: 20px 0;
+		}
+
+		.control-group {
+			display: flex;
+			flex-direction: column;
+			gap: 5px;
+		}
+
+		label {
+			color: #00ff00;
+			font-weight: bold;
+		}
+
+		input[type="color"],
+		input[type="range"],
+		select {
+			width: 100%;
+			padding: 5px;
+			background: #1a1a1a;
+			border: 1px solid #00ff00;
+			color: #00ff00;
+		}
+
+		button {
+			background: #00ff00;
+			color: #000;
+			border: none;
+			padding: 12px 24px;
+			font-size: 16px;
+			font-weight: bold;
+			cursor: pointer;
+			border-radius: 5px;
+			margin: 5px;
+			font-family: 'Courier New', monospace;
+		}
+
+		button:hover {
+			background: #00cc00;
+			box-shadow: 0 0 15px #00ff00;
+		}
+
+		.button-group {
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
+			margin-top: 20px;
+		}
+
+		.info {
+			background: #1a1a1a;
+			padding: 10px;
+			border-radius: 5px;
+			margin-top: 10px;
+			font-size: 12px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<h1>🎮 Prop Background Generator 🎮</h1>
+
+		<div class="canvas-container">
+			<div class="canvas-wrapper">
+				<h3>Actual Size (<span id="actualSize">12x6</span>)</h3>
+				<canvas id="canvas" width="12" height="6"></canvas>
+			</div>
+			<div class="canvas-wrapper">
+				<h3>Preview (Zoomed <span id="zoomDisplay">20</span>x)</h3>
+				<canvas id="preview" width="240" height="120"></canvas>
+			</div>
+		</div>
+
+		<div class="controls">
+			<div class="control-group">
+				<label for="width">Width: <span id="widthValue">12</span>px</label>
+				<input type="range" id="width" min="1" max="64" value="12">
+			</div>
+			<div class="control-group">
+				<label for="height">Height: <span id="heightValue">6</span>px</label>
+				<input type="range" id="height" min="1" max="64" value="6">
+			</div>
+			<div class="control-group">
+				<label for="borderRadius">Border Radius: <span id="borderRadiusValue">0</span>px</label>
+				<input type="range" id="borderRadius" min="0" max="32" value="0">
+			</div>
+			<div class="control-group">
+				<label for="zoom">Preview Zoom:</label>
+				<select id="zoom">
+					<option value="5">5x</option>
+					<option value="10">10x</option>
+					<option value="20" selected>20x</option>
+					<option value="30">30x</option>
+					<option value="40">40x</option>
+				</select>
+			</div>
+			<div class="control-group">
+				<label for="baseColor">Base Color:</label>
+				<input type="color" id="baseColor" value="#2a5a2a">
+			</div>
+			<div class="control-group">
+				<label for="accentColor">Accent Color:</label>
+				<input type="color" id="accentColor" value="#3a7a3a">
+			</div>
+			<div class="control-group">
+				<label for="pattern">Pattern:</label>
+				<select id="pattern">
+					<option value="noise">Noise</option>
+					<option value="gradient">Gradient (Left-Right)</option>
+					<option value="gradientVertical">Gradient (Top-Bottom)</option>
+					<option value="gradientDiagonal">Gradient (Diagonal)</option>
+					<option value="gradientDual">Dual Gradient (Edge-Center-Edge)</option>
+					<option value="gradientRadial">Radial (Center Out)</option>
+					<option value="gradientRadialIn">Radial (Edge In)</option>
+					<option value="gradientCorners">Four Corners</option>
+					<option value="border">Border Frame</option>
+					<option value="borderDouble">Double Border</option>
+					<option value="borderRounded">Rounded Border</option>
+					<option value="checkerboard">Checkerboard</option>
+					<option value="dots">Dots</option>
+					<option value="diagonal">Diagonal Stripes</option>
+					<option value="crosshatch">Crosshatch</option>
+					<option value="circuit">Circuit Board</option>
+					<option value="plasma">Plasma Effect</option>
+					<option value="plasma2">Plasma Wave</option>
+					<option value="scanlines">Scanlines</option>
+					<option value="perlin">Perlin-like Noise</option>
+					<option value="voronoi">Voronoi Cells</option>
+					<option value="waves">Sine Waves</option>
+					<option value="spiral">Spiral</option>
+					<option value="target">Target/Bullseye</option>
+					<option value="diamonds">Diamonds</option>
+					<option value="hexagons">Hexagon Pattern</option>
+					<option value="sparkle">Sparkle/Stars</option>
+					<option value="fire">Fire Effect</option>
+					<option value="water">Water Ripple</option>
+					<option value="matrix">Matrix Rain</option>
+					<option value="marble">Marble Texture</option>
+				</select>
+			</div>
+			<div class="control-group">
+				<label for="variance">Variance: <span id="varianceValue">30</span></label>
+				<input type="range" id="variance" min="0" max="100" value="30">
+			</div>
+		</div>
+
+		<div class="button-group">
+			<button onclick="generateBackground()">🔄 Regenerate</button>
+			<button onclick="downloadPNG('prop_ammo')">💾 Download Ammo</button>
+			<button onclick="downloadPNG('prop_life')">💾 Download Life</button>
+			<button onclick="downloadPNG('prop_shield')">💾 Download Shield</button>
+			<button onclick="downloadPNG('prop_points')">💾 Download Points</button>
+		</div>
+
+		<div class="info">
+			<strong>Instructions:</strong> Adjust the colors and pattern, then download each prop type.
+			Use Border Radius to create rounded button-like shapes with transparent corners!
+			The generated PNG will have full alpha transparency outside the rounded area.
+		</div>
+	</div>
+
+	<script>
+		const canvas = document.getElementById('canvas');
+		const preview = document.getElementById('preview');
+		const ctx = canvas.getContext('2d');
+		const previewCtx = preview.getContext('2d');
+
+		function hexToRgb(hex) {
+			const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+			return result ? {
+				r: parseInt(result[1], 16),
+				g: parseInt(result[2], 16),
+				b: parseInt(result[3], 16)
+			} : null;
+		}
+
+		function varyColor(rgb, variance) {
+			const v = variance / 100 * 50;
+			return {
+				r: Math.max(0, Math.min(255, rgb.r + (Math.random() - 0.5) * v)),
+				g: Math.max(0, Math.min(255, rgb.g + (Math.random() - 0.5) * v)),
+				b: Math.max(0, Math.min(255, rgb.b + (Math.random() - 0.5) * v))
+			};
+		}
+
+		function updateCanvasSize() {
+			const width = parseInt(document.getElementById('width').value);
+			const height = parseInt(document.getElementById('height').value);
+			const zoom = parseInt(document.getElementById('zoom').value);
+			const borderRadius = parseInt(document.getElementById('borderRadius').value);
+
+			// Update canvas dimensions
+			canvas.width = width;
+			canvas.height = height;
+
+			// Update preview dimensions
+			preview.width = width * zoom;
+			preview.height = height * zoom;
+
+			// Update display labels
+			document.getElementById('widthValue').textContent = width;
+			document.getElementById('heightValue').textContent = height;
+			document.getElementById('borderRadiusValue').textContent = borderRadius;
+			document.getElementById('actualSize').textContent = `${width}x${height}`;
+			document.getElementById('zoomDisplay').textContent = zoom;
+
+			generateBackground();
+		}
+
+		function isInsideRoundedRect(x, y, width, height, radius) {
+			if (radius === 0) return true;
+
+			// Check if point is in the main rectangular area (no corners)
+			if (x >= radius && x < width - radius) return true;
+			if (y >= radius && y < height - radius) return true;
+
+			// Check corners using circular distance
+			// Top-left corner
+			if (x < radius && y < radius) {
+				const dx = radius - x;
+				const dy = radius - y;
+				return (dx * dx + dy * dy) <= radius * radius;
+			}
+			// Top-right corner
+			if (x >= width - radius && y < radius) {
+				const dx = x - (width - radius - 1);
+				const dy = radius - y;
+				return (dx * dx + dy * dy) <= radius * radius;
+			}
+			// Bottom-left corner
+			if (x < radius && y >= height - radius) {
+				const dx = radius - x;
+				const dy = y - (height - radius - 1);
+				return (dx * dx + dy * dy) <= radius * radius;
+			}
+			// Bottom-right corner
+			if (x >= width - radius && y >= height - radius) {
+				const dx = x - (width - radius - 1);
+				const dy = y - (height - radius - 1);
+				return (dx * dx + dy * dy) <= radius * radius;
+			}
+
+			return true;
+		}
+
+		function generateBackground() {
+			const width = canvas.width;
+			const height = canvas.height;
+			const baseColor = hexToRgb(document.getElementById('baseColor').value);
+			const accentColor = hexToRgb(document.getElementById('accentColor').value);
+			const variance = parseInt(document.getElementById('variance').value);
+			const pattern = document.getElementById('pattern').value;
+			const zoom = parseInt(document.getElementById('zoom').value);
+			const borderRadius = parseInt(document.getElementById('borderRadius').value);
+
+			const imageData = ctx.createImageData(width, height);
+			const data = imageData.data;
+
+			for (let y = 0; y < height; y++) {
+				for (let x = 0; x < width; x++) {
+					const idx = (y * width + x) * 4;
+
+					// Check if pixel is inside rounded rectangle
+					const isInside = isInsideRoundedRect(x, y, width, height, borderRadius);
+
+					if (!isInside) {
+						// Make transparent
+						data[idx] = 0;
+						data[idx + 1] = 0;
+						data[idx + 2] = 0;
+						data[idx + 3] = 0;
+						continue;
+					}
+
+					let color;
+
+					switch (pattern) {
+						case 'gradientDiagonal':
+							const tDiag = (x + y) / (width + height - 2);
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tDiag,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tDiag,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tDiag
+							};
+							color = varyColor(color, variance / 2);
+							break;
+
+						case 'gradientCorners':
+							// Blend all four corners
+							const tlWeight = (1 - x / (width - 1)) * (1 - y / (height - 1));
+							const trWeight = (x / (width - 1)) * (1 - y / (height - 1));
+							const blWeight = (1 - x / (width - 1)) * (y / (height - 1));
+							const brWeight = (x / (width - 1)) * (y / (height - 1));
+							color = {
+								r: baseColor.r * tlWeight + accentColor.r * trWeight +
+									baseColor.r * blWeight + accentColor.r * brWeight,
+								g: baseColor.g * tlWeight + accentColor.g * trWeight +
+									baseColor.g * blWeight + accentColor.g * brWeight,
+								b: baseColor.b * tlWeight + accentColor.b * trWeight +
+									baseColor.b * blWeight + accentColor.b * brWeight
+							};
+							color = varyColor(color, variance / 2);
+							break;
+
+						case 'borderRounded':
+							const roundRad = Math.min(2, Math.floor(Math.min(width, height) / 4));
+							const isCorner = (x < roundRad && y < roundRad) ||
+								(x >= width - roundRad && y < roundRad) ||
+								(x < roundRad && y >= height - roundRad) ||
+								(x >= width - roundRad && y >= height - roundRad);
+							const isBorder = x === 0 || x === width - 1 || y === 0 || y === height - 1;
+							if (isBorder && !isCorner) {
+								color = varyColor(accentColor, variance / 2);
+							} else {
+								color = varyColor(baseColor, variance);
+							}
+							break;
+
+						case 'plasma2':
+							// Different plasma algorithm
+							const p2 = Math.sin(x * 0.3) + Math.cos(y * 0.4) +
+								Math.sin(Math.sqrt((x - width / 2) ** 2 + (y - height / 2) ** 2) * 0.2);
+							const tPlasma2 = (p2 + 3) / 6;
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tPlasma2,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tPlasma2,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tPlasma2
+							};
+							color = varyColor(color, variance / 4);
+							break;
+
+						case 'perlin':
+							// Simple Perlin-like noise using sine waves
+							const freq1 = 0.1, freq2 = 0.05, freq3 = 0.2;
+							const perlin =
+								Math.sin(x * freq1) * Math.cos(y * freq1) * 0.5 +
+								Math.sin(x * freq2 + y * freq2) * 0.3 +
+								Math.sin(x * freq3 - y * freq3) * 0.2;
+							const tPerlin = (perlin + 1) / 2;
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tPerlin,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tPerlin,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tPerlin
+							};
+							break;
+
+						case 'voronoi':
+							// Simple Voronoi cells using distance to points
+							const numCells = Math.min(8, Math.floor((width * height) / 16));
+							let minDist = Infinity;
+							const seed = 12345;
+							for (let i = 0; i < numCells; i++) {
+								const px = ((seed + i * 2654435761) % width);
+								const py = ((seed + i * 1597334677) % height);
+								const d = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
+								if (d < minDist) minDist = d;
+							}
+							const maxCellDist = Math.sqrt(width * width + height * height);
+							const tVor = minDist / maxCellDist;
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tVor,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tVor,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tVor
+							};
+							break;
+
+						case 'waves':
+							const wave = Math.sin(x * 0.5) + Math.sin(y * 0.3);
+							const tWave = (wave + 2) / 4;
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tWave,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tWave,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tWave
+							};
+							color = varyColor(color, variance / 3);
+							break;
+
+						case 'spiral':
+							const dx = x - width / 2;
+							const dy = y - height / 2;
+							const angle = Math.atan2(dy, dx);
+							const radius = Math.sqrt(dx * dx + dy * dy);
+							const spiral = (angle + radius * 0.3) % (Math.PI * 2);
+							const tSpiral = spiral / (Math.PI * 2);
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tSpiral,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tSpiral,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tSpiral
+							};
+							break;
+
+						case 'target':
+							const centerXT = width / 2;
+							const centerYT = height / 2;
+							const distTarget = Math.sqrt((x - centerXT) ** 2 + (y - centerYT) ** 2);
+							const rings = Math.floor(distTarget) % 2;
+							color = rings === 0 ? varyColor(baseColor, variance) : varyColor(accentColor, variance);
+							break;
+
+						case 'diamonds':
+							const diamond = (Math.abs(x - width / 2) + Math.abs(y - height / 2)) % 4;
+							color = diamond < 2 ? varyColor(baseColor, variance) : varyColor(accentColor, variance);
+							break;
+
+						case 'hexagons':
+							// Approximation of hexagonal tiling
+							const hexSize = 4;
+							const hexX = Math.floor(x / hexSize);
+							const hexY = Math.floor(y / hexSize);
+							const hexPattern = (hexX + hexY) % 2;
+							color = hexPattern === 0 ? varyColor(baseColor, variance) : varyColor(accentColor, variance);
+							break;
+
+						case 'sparkle':
+							// Random sparkles/stars
+							const sparkleChance = ((x * 7919 + y * 6547) % 100) / 100;
+							if (sparkleChance > 0.92) {
+								color = varyColor(accentColor, variance / 2);
+							} else {
+								color = varyColor(baseColor, variance);
+							}
+							break;
+
+						case 'fire':
+							// Fire effect - hot at bottom, cooler at top
+							const fireBase = 1 - (y / (height - 1));
+							const fireNoise = Math.sin(x * 0.8 + y * 0.3) * 0.3;
+							const tFire = Math.max(0, Math.min(1, fireBase + fireNoise));
+							color = {
+								r: accentColor.r * tFire + baseColor.r * (1 - tFire),
+								g: accentColor.g * tFire * 0.7 + baseColor.g * (1 - tFire),
+								b: accentColor.b * tFire * 0.3 + baseColor.b * (1 - tFire)
+							};
+							color = varyColor(color, variance / 2);
+							break;
+
+						case 'water':
+							// Water ripple effect
+							const centerXW = width / 2;
+							const centerYW = height / 2;
+							const distWater = Math.sqrt((x - centerXW) ** 2 + (y - centerYW) ** 2);
+							const ripple = Math.sin(distWater * 0.8) * 0.5 + 0.5;
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * ripple,
+								g: baseColor.g + (accentColor.g - baseColor.g) * ripple,
+								b: baseColor.b + (accentColor.b - baseColor.b) * ripple
+							};
+							color = varyColor(color, variance / 3);
+							break;
+
+						case 'matrix':
+							// Matrix-style vertical columns
+							const colPattern = ((x * 31) % 100) / 100;
+							const rowFade = y / (height - 1);
+							if (colPattern > 0.7 && rowFade > Math.random()) {
+								color = varyColor(accentColor, variance);
+							} else {
+								color = varyColor(baseColor, variance * 2);
+							}
+							break;
+
+						case 'marble':
+							// Marble texture using turbulence
+							const marble =
+								x * 0.1 +
+								Math.sin(x * 0.2 + y * 0.3) * 3 +
+								Math.sin(x * 0.1 - y * 0.2) * 2 +
+								Math.sin((x + y) * 0.15) * 1.5;
+							const tMarble = (Math.sin(marble) + 1) / 2;
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tMarble,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tMarble,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tMarble
+							};
+							color = varyColor(color, variance / 3);
+							break;
+
+						case 'gradient':
+							const t = x / (width - 1);
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * t,
+								g: baseColor.g + (accentColor.g - baseColor.g) * t,
+								b: baseColor.b + (accentColor.b - baseColor.b) * t
+							};
+							color = varyColor(color, variance / 2);
+							break;
+
+						case 'gradientVertical':
+							const tVert = y / (height - 1);
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tVert,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tVert,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tVert
+							};
+							color = varyColor(color, variance / 2);
+							break;
+
+						case 'gradientDual':
+							// Edge -> Center -> Edge (creates a "strip" effect)
+							const centerX = (width - 1) / 2;
+							const distFromCenter = Math.abs(x - centerX) / centerX;
+							color = {
+								r: accentColor.r + (baseColor.r - accentColor.r) * (1 - distFromCenter),
+								g: accentColor.g + (baseColor.g - accentColor.g) * (1 - distFromCenter),
+								b: accentColor.b + (baseColor.b - accentColor.b) * (1 - distFromCenter)
+							};
+							color = varyColor(color, variance / 2);
+							break;
+
+						case 'gradientRadial':
+							// From center outward
+							const centerXR = (width - 1) / 2;
+							const centerYR = (height - 1) / 2;
+							const maxDist = Math.sqrt(centerXR * centerXR + centerYR * centerYR);
+							const dist = Math.sqrt(
+								(x - centerXR) * (x - centerXR) +
+								(y - centerYR) * (y - centerYR)
+							);
+							const tRad = Math.min(1, dist / maxDist);
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tRad,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tRad,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tRad
+							};
+							color = varyColor(color, variance / 3);
+							break;
+
+						case 'gradientRadialIn':
+							// From edges inward (inverted radial)
+							const cXRI = (width - 1) / 2;
+							const cYRI = (height - 1) / 2;
+							const maxDistIn = Math.sqrt(cXRI * cXRI + cYRI * cYRI);
+							const distIn = Math.sqrt(
+								(x - cXRI) * (x - cXRI) +
+								(y - cYRI) * (y - cYRI)
+							);
+							const tRadIn = 1 - Math.min(1, distIn / maxDistIn);
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tRadIn,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tRadIn,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tRadIn
+							};
+							color = varyColor(color, variance / 3);
+							break;
+
+						case 'border':
+							if (x === 0 || x === width - 1 || y === 0 || y === height - 1) {
+								color = varyColor(accentColor, variance / 2);
+							} else {
+								color = varyColor(baseColor, variance);
+							}
+							break;
+
+						case 'borderDouble':
+							if (x === 0 || x === width - 1 || y === 0 || y === height - 1 ||
+								x === 1 || x === width - 2 || y === 1 || y === height - 2) {
+								color = varyColor(accentColor, variance / 2);
+							} else {
+								color = varyColor(baseColor, variance);
+							}
+							break;
+
+						case 'checkerboard':
+							color = ((x + y) % 2 === 0)
+								? varyColor(baseColor, variance)
+								: varyColor(accentColor, variance);
+							break;
+
+						case 'dots':
+							if ((x % 3 === 1 && y % 2 === 1)) {
+								color = varyColor(accentColor, variance);
+							} else {
+								color = varyColor(baseColor, variance);
+							}
+							break;
+
+						case 'diagonal':
+							color = ((x + y) % 3 === 0)
+								? varyColor(accentColor, variance)
+								: varyColor(baseColor, variance);
+							break;
+
+						case 'crosshatch':
+							if ((x % 2 === 0) || (y % 2 === 0)) {
+								color = varyColor(accentColor, variance);
+							} else {
+								color = varyColor(baseColor, variance);
+							}
+							break;
+
+						case 'circuit':
+							// Circuit board style with lines (scaled to canvas size)
+							const lineSpacing = Math.max(3, Math.floor(width / 4));
+							if ((x % lineSpacing === 0) || (y % Math.max(2, Math.floor(height / 3)) === 0) ||
+								(x % Math.max(4, lineSpacing + 1) === 0 && y % 3 === 0)) {
+								color = varyColor(accentColor, variance / 2);
+							} else {
+								color = varyColor(baseColor, variance);
+							}
+							break;
+
+						case 'plasma':
+							// Plasma-like effect using sine waves (scaled)
+							const scaleX = 0.5 * (12 / width);
+							const scaleY = 0.8 * (6 / height);
+							const plasma =
+								Math.sin(x * scaleX) * 0.5 +
+								Math.sin(y * scaleY) * 0.5 +
+								Math.sin((x + y) * 0.4 * (12 / width)) * 0.5;
+							const tPlasma = (plasma + 1.5) / 3;
+							color = {
+								r: baseColor.r + (accentColor.r - baseColor.r) * tPlasma,
+								g: baseColor.g + (accentColor.g - baseColor.g) * tPlasma,
+								b: baseColor.b + (accentColor.b - baseColor.b) * tPlasma
+							};
+							color = varyColor(color, variance / 4);
+							break;
+
+						case 'scanlines':
+							if (y % 2 === 0) {
+								color = varyColor(baseColor, variance);
+							} else {
+								color = varyColor(accentColor, variance);
+							}
+							break;
+
+						case 'noise':
+						default:
+							color = Math.random() > 0.3
+								? varyColor(baseColor, variance)
+								: varyColor(accentColor, variance);
+							break;
+					}
+
+					data[idx] = Math.round(color.r);
+					data[idx + 1] = Math.round(color.g);
+					data[idx + 2] = Math.round(color.b);
+					data[idx + 3] = 255;
+				}
+			}
+
+			ctx.putImageData(imageData, 0, 0);
+
+			// Update preview
+			previewCtx.imageSmoothingEnabled = false;
+			previewCtx.clearRect(0, 0, preview.width, preview.height);
+			previewCtx.drawImage(canvas, 0, 0, preview.width, preview.height);
+		}
+
+		function downloadPNG(filename) {
+			const link = document.createElement('a');
+			link.download = `${filename}.png`;
+			link.href = canvas.toDataURL('image/png');
+			link.click();
+		}
+
+		// Update variance display
+		document.getElementById('variance').addEventListener('input', (e) => {
+			document.getElementById('varianceValue').textContent = e.target.value;
+			generateBackground();
+		});
+
+		// Update width/height/zoom/borderRadius displays and regenerate
+		document.getElementById('width').addEventListener('input', updateCanvasSize);
+		document.getElementById('height').addEventListener('input', updateCanvasSize);
+		document.getElementById('zoom').addEventListener('change', updateCanvasSize);
+		document.getElementById('borderRadius').addEventListener('input', updateCanvasSize);
+
+		// Auto-regenerate on any control change
+		document.querySelectorAll('input[type="color"], select#pattern').forEach(element => {
+			element.addEventListener('change', generateBackground);
+		});
+
+		// Generate initial background
+		generateBackground();
+	</script>
+</body>
+
+</html>

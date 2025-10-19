@@ -27,7 +27,7 @@ pub const WeaponManager = struct {
         wm.* = WeaponManager{
             .default_weapon = try DefaultWeapon.init(allocator, screen),
             .spread_weapon = try SpreadWeapon.init(allocator, screen),
-            .active_weapon = .Spread,
+            .active_weapon = .Default,
         };
 
         return wm;
