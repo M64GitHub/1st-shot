@@ -113,6 +113,8 @@ pub const GameManager = struct {
         switch (self.gamestate.state) {
             .FadeIn => {
                 self.player.ship.visible = false;
+                try self.obstacles.update();
+                self.starfield.update();
                 // maybe animate screen brightness here
             },
             .StartingInvincible, .AlmostVulnerable, .Playing => {
