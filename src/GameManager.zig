@@ -1,6 +1,7 @@
 const std = @import("std");
 const movy = @import("movy");
 const PlayerShip = @import("PlayerShip.zig").PlayerShip;
+const WeaponManager = @import("WeaponManager.zig").WeaponManager;
 const ShieldManager = @import("ShieldManager.zig").ShieldManager;
 const GameStateManager = @import("GameStateManager.zig").GameStateManager;
 const ExplosionManager = @import("ExplosionManager.zig").ExplosionManager;
@@ -12,7 +13,8 @@ const StatusWindow = @import("StatusWindow.zig").StatusWindow;
 const Starfield = @import("Starfield.zig").Starfield;
 const PropsManager = @import("PropsManager.zig").PropsManager;
 const Prop = @import("PropsManager.zig").Prop;
-const WeaponManager = @import("WeaponManager.zig").WeaponManager;
+const DropStacleManager = @import("DropStacleManager.zig").DropStacleManager;
+const DropStacleType = @import("DropStacleManager.zig").DropStacleType;
 
 const Lives = 3;
 
@@ -27,6 +29,7 @@ pub const GameManager = struct {
     statuswin: StatusWindow,
     starfield: *Starfield,
     props: *PropsManager,
+    dropstacles: *DropStacleManager,
     screen: *movy.Screen,
     frame_counter: usize = 0,
 
@@ -53,6 +56,7 @@ pub const GameManager = struct {
             .vismanager = VisualsManager.init(allocator, screen),
             .exploder = try ExplosionManager.init(allocator, screen),
             .obstacles = try ObstacleManager.init(allocator, screen),
+            .dropstacles = try DropStacleManager.init(allocator, screen),
             .shields = try ShieldManager.init(allocator, screen),
             .screen = screen,
         };
@@ -64,6 +68,7 @@ pub const GameManager = struct {
         self.obstacles.deinit(allocator);
         self.starfield.deinit(allocator);
         self.props.deinit(allocator);
+        self.dropstacles.deinit(allocator);
     }
 
     pub fn onKeyDown(self: *GameManager, key: movy.input.Key) void {
@@ -143,6 +148,7 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 self.starfield.update();
                 try self.props.update();
+                try self.dropstacles.update();
                 // maybe animate screen brightness here
             },
             .StartingInvincible, .AlmostVulnerable, .Playing => {
@@ -166,8 +172,10 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 self.starfield.update();
                 try self.props.update();
+                try self.dropstacles.update();
                 self.doShipCollision();
                 self.doProjectileCollisions();
+                self.doDropStacleCollisions();
                 self.handlePropCollision();
             },
             .Dying,
@@ -181,6 +189,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
@@ -195,6 +204,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
@@ -220,6 +230,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
@@ -228,6 +239,7 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
@@ -272,6 +284,7 @@ pub const GameManager = struct {
         try self.player.weapon_manager.addRenderSurfaces();
         try self.shields.addRenderSurfaces();
         try self.props.addRenderSurfaces();
+        try self.dropstacles.addRenderSurfaces();
         try self.obstacles.addRenderSurfaces();
 
         try self.screen.addRenderSurface(self.starfield.out_surface);
@@ -691,6 +704,119 @@ pub const GameManager = struct {
             );
             _ = self.props.spawnExtraLife(rand_x, -10) catch {};
             self.player.last_life_milestone = current_life_milestone;
+        }
+    }
+
+    // Add to GameManager.zig
+
+    pub fn doDropStacleCollisions(self: *GameManager) void {
+        // Check default weapon collisions
+        for (&self.player.weapon_manager.default_weapon.projectiles) |*proj| {
+            if (!proj.active) continue;
+
+            for (&self.dropstacles.active_dropstacles) |*dropstacle| {
+                if (!dropstacle.active) continue;
+
+                // Generous hitbox for dropstacles (easier to hit)
+                const coll_inset: i32 = 0;
+
+                if (checkCollision(proj.sprite, dropstacle.sprite, coll_inset)) {
+                    proj.release();
+                    const pos_proj = proj.getCenterCoords();
+
+                    // Small explosion at projectile hit
+                    self.exploder.tryExplode(
+                        pos_proj.x,
+                        pos_proj.y,
+                        .SmallPurple,
+                    ) catch {};
+
+                    if (dropstacle.tryDestroy()) {
+                        const pos_drop = dropstacle.getCenterCoords();
+
+                        // Bigger explosion when dropstacle is destroyed
+                        self.exploder.tryExplode(
+                            pos_drop.x,
+                            pos_drop.y,
+                            .BigBlu,
+                        ) catch {};
+
+                        // Spawn props based on dropstacle type
+                        self.spawnDropStacleReward(pos_drop.x, pos_drop.y, dropstacle.kind);
+                    }
+                }
+            }
+        }
+
+        // Check spread weapon collisions
+        for (&self.player.weapon_manager.spread_weapon.projectiles) |*proj| {
+            if (!proj.active) continue;
+
+            for (&self.dropstacles.active_dropstacles) |*dropstacle| {
+                if (!dropstacle.active) continue;
+
+                const coll_inset: i32 = 0;
+
+                if (checkCollision(proj.sprite, dropstacle.sprite, coll_inset)) {
+                    proj.release();
+                    const pos_proj = proj.getCenterCoords();
+
+                    self.exploder.tryExplode(
+                        pos_proj.x,
+                        pos_proj.y,
+                        .SmallPurple,
+                    ) catch {};
+
+                    if (dropstacle.tryDestroy()) {
+                        const pos_drop = dropstacle.getCenterCoords();
+
+                        self.exploder.tryExplode(
+                            pos_drop.x,
+                            pos_drop.y,
+                            .BigBlu,
+                        ) catch {};
+
+                        self.spawnDropStacleReward(pos_drop.x, pos_drop.y, dropstacle.kind);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn spawnDropStacleReward(
+        self: *GameManager,
+        x: i32,
+        y: i32,
+        kind: DropStacleType,
+    ) void {
+        switch (kind) {
+            .ShieldDrop => {
+                // Spawn shield prop
+                _ = self.props.spawnShieldBonus(x, y) catch {};
+            },
+            .LifeDrop => {
+                // Spawn extra life prop
+                _ = self.props.spawnExtraLife(x, y) catch {};
+            },
+            .AmmoDrop => {
+                // Spawn ammo prop (50-100 ammo)
+                const ammo_amount = self.dropstacles.rng.random().intRangeAtMost(u32, 50, 100);
+                _ = self.props.spawnAmmoBonus(x, y, ammo_amount) catch {};
+            },
+            .SpecialWeapon => {
+                // Spawn special weapon prop with 50 ammo
+                // TODO: Implement when special weapon system is ready
+                _ = self.props.spawnAmmoBonus(x, y, 50) catch {};
+            },
+            .Jackpot => {
+                // JACKPOT! Spawn ALL THREE props with slight offset
+                _ = self.props.spawnShieldBonus(x - 8, y) catch {};
+                _ = self.props.spawnExtraLife(x, y) catch {};
+                _ = self.props.spawnAmmoBonus(x + 8, y, 100) catch {};
+
+                // Extra big explosion for jackpot!
+                self.exploder.tryExplode(x, y, .Huge) catch {};
+            },
         }
     }
 };
