@@ -45,7 +45,7 @@ pub const Prop = struct {
         };
 
         const value_text: []const u8 = switch (self.kind) {
-            .ExtraLife => "+1",
+            .ExtraLife => "",
             .ShieldBonus => "",
             .PointsBonus => blk: {
                 break :blk std.fmt.bufPrint(
