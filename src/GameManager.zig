@@ -609,8 +609,8 @@ pub const GameManager = struct {
                         self.player.score += obstacle.score;
 
                         _ = self.props.spawnPointsBonus(
-                            pos_obs.x - 6,
-                            pos_obs.y - 3,
+                            pos_obs.x - 7,
+                            pos_obs.y - 9,
                             obstacle.score,
                         ) catch {};
 
@@ -793,7 +793,11 @@ pub const GameManager = struct {
                         ) catch {};
 
                         // Spawn props based on dropstacle type
-                        self.spawnDropStacleReward(pos_drop.x, pos_drop.y, dropstacle.kind);
+                        self.spawnDropStacleReward(
+                            pos_drop.x - 8,
+                            pos_drop.y - 6,
+                            dropstacle.kind,
+                        );
                     }
                 }
             }
@@ -827,7 +831,11 @@ pub const GameManager = struct {
                             .BigBlu,
                         ) catch {};
 
-                        self.spawnDropStacleReward(pos_drop.x, pos_drop.y, dropstacle.kind);
+                        self.spawnDropStacleReward(
+                            pos_drop.x - 8,
+                            pos_drop.y - 6,
+                            dropstacle.kind,
+                        );
                     }
                 }
             }
