@@ -192,7 +192,8 @@ pub const GameManager = struct {
             .Dying,
             => {
                 if (self.gamestate.justTransitioned()) {
-                    self.player.lives -= 1;
+                    if (self.player.lives > 0)
+                        self.player.lives -= 1;
                     self.player.ship.visible = false;
                     self.player.controller.reset();
                     self.shields.reset();
@@ -658,16 +659,15 @@ pub const GameManager = struct {
             )) {
                 self.exodus(1);
 
-                if (drop.tryDestroy()) {
-                    const pos_drop = drop.getCenterCoords();
+                const pos_drop = drop.getCenterCoords();
 
-                    // Bigger explosion when dropstacle is destroyed
-                    self.exploder.tryExplode(
-                        pos_drop.x,
-                        pos_drop.y,
-                        .BigBlu,
-                    ) catch {};
-                }
+                // Bigger explosion when dropstacle is destroyed
+                self.exploder.tryExplode(
+                    pos_drop.x,
+                    pos_drop.y,
+                    .BigBlu,
+                ) catch {};
+                drop.active = false;
             }
         }
     }
