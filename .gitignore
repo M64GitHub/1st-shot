@@ -2,4 +2,6 @@
 zig-out/
 *.o
 assets/resources
+.gitignore
+
 
