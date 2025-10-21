@@ -15,6 +15,7 @@ const PropsManager = @import("PropsManager.zig").PropsManager;
 const Prop = @import("PropsManager.zig").Prop;
 const DropStacleManager = @import("DropStacleManager.zig").DropStacleManager;
 const DropStacleType = @import("DropStacleManager.zig").DropStacleType;
+const EnemyManager = @import("EnemyManager.zig").EnemyManager;
 
 const Lives = 3;
 const Points_For_Ammo: usize = 3000;
@@ -29,6 +30,7 @@ pub const GameManager = struct {
     shields: *ShieldManager,
     exploder: *ExplosionManager,
     obstacles: *ObstacleManager,
+    enemies: *EnemyManager,
     visuals: GameVisuals,
     vismanager: VisualsManager,
     statuswin: StatusWindow,
@@ -61,6 +63,7 @@ pub const GameManager = struct {
             .vismanager = VisualsManager.init(allocator, screen),
             .exploder = try ExplosionManager.init(allocator, screen),
             .obstacles = try ObstacleManager.init(allocator, screen),
+            .enemies = try EnemyManager.init(allocator, screen),
             .dropstacles = try DropStacleManager.init(allocator, screen),
             .shields = try ShieldManager.init(allocator, screen),
             .screen = screen,
@@ -71,6 +74,7 @@ pub const GameManager = struct {
         self.player.deinit(allocator);
         self.exploder.deinit(allocator);
         self.obstacles.deinit(allocator);
+        self.enemies.deinit(allocator);
         self.starfield.deinit(allocator);
         self.props.deinit(allocator);
         self.dropstacles.deinit(allocator);
@@ -151,6 +155,7 @@ pub const GameManager = struct {
             .FadeIn => {
                 self.player.ship.visible = false;
                 try self.obstacles.update();
+                try self.enemies.update();
                 self.starfield.update();
                 try self.props.update();
                 try self.dropstacles.update();
@@ -180,11 +185,14 @@ pub const GameManager = struct {
                 );
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.enemies.update();
                 self.starfield.update();
                 try self.props.update();
                 try self.dropstacles.update();
                 self.doShipCollision();
+                self.doEnemyShipCollision();
                 self.doProjectileCollisions();
+                self.doEnemyCollisions();
                 self.doDropStacleCollisions();
                 self.handlePropCollision();
                 self.handleDropCollision();
@@ -201,10 +209,12 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.enemies.update();
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
+                self.doEnemyCollisions();
                 self.handlePropCollision();
                 self.handleDropCollision();
             },
@@ -217,10 +227,12 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.enemies.update();
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
+                self.doEnemyCollisions();
             },
             .FadeToGameOver => {
                 if (self.gamestate.justTransitioned()) {
@@ -243,19 +255,23 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.enemies.update();
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
+                self.doEnemyCollisions();
             },
             .GameOver => {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
+                try self.enemies.update();
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
                 self.doProjectileCollisions();
+                self.doEnemyCollisions();
             },
             .FadingToPause => {
                 if (self.gamestate.justTransitioned()) {
@@ -299,6 +315,7 @@ pub const GameManager = struct {
         try self.props.addRenderSurfaces();
         try self.dropstacles.addRenderSurfaces();
         try self.obstacles.addRenderSurfaces();
+        try self.enemies.addRenderSurfaces();
 
         try self.screen.addRenderSurface(self.starfield.out_surface);
         self.screen.render();
@@ -876,6 +893,367 @@ pub const GameManager = struct {
                 // Extra big explosion for jackpot!
                 self.exploder.tryExplode(x, y, .Huge) catch {};
             },
+        }
+    }
+
+    // -- Enemy collision with player ship
+    pub fn doEnemyShipCollision(self: *GameManager) void {
+        // Check SingleEnemy collisions
+        for (&self.enemies.active_single_enemies) |*enemy| {
+            if (!enemy.active) continue;
+
+            const coll_inset: i32 = 1;
+
+            if (checkCollisionShip(
+                self.player.ship.sprite_ship,
+                enemy.sprite,
+                1,
+                11,
+                coll_inset,
+            )) {
+                const pos_ship = self.player.ship.getCenterCoords();
+                const pos_enemy = enemy.getCenterCoords();
+                var sign: i32 = 1;
+
+                if (pos_ship.x < pos_enemy.x) {
+                    sign = -1;
+                }
+
+                if (self.shields.active_shield == .None) {
+                    self.exodus(sign);
+                } else {
+                    // Destroy enemy on shield collision
+                    enemy.active = false;
+                    self.enemies.single_enemy_pool.release(enemy.sprite);
+
+                    // Explosion
+                    self.exploder.tryExplode(
+                        pos_enemy.x,
+                        pos_enemy.y,
+                        .Big,
+                    ) catch {};
+                }
+            }
+        }
+
+        // Check SwarmEnemy collisions
+        for (&self.enemies.active_swarm_enemies) |*swarm| {
+            if (!swarm.active) continue;
+
+            const coll_inset: i32 = 1;
+
+            // Check collision with master
+            if (checkCollisionShip(
+                self.player.ship.sprite_ship,
+                swarm.master_sprite,
+                1,
+                11,
+                coll_inset,
+            )) {
+                const pos_ship = self.player.ship.getCenterCoords();
+                const pos_swarm = swarm.getCenterCoords();
+                var sign: i32 = 1;
+
+                if (pos_ship.x < pos_swarm.x) {
+                    sign = -1;
+                }
+
+                if (self.shields.active_shield == .None) {
+                    self.exodus(sign);
+                } else {
+                    // Destroy swarm on shield collision
+                    swarm.active = false;
+                    for (0..swarm.tail_count) |i| {
+                        swarm.tail_pool.release(swarm.tail_sprites[i]);
+                    }
+                    swarm.tail_pool.release(swarm.master_sprite);
+
+                    // Explosion
+                    self.exploder.tryExplode(
+                        pos_swarm.x,
+                        pos_swarm.y,
+                        .Big,
+                    ) catch {};
+                }
+                continue;
+            }
+
+            // Check collision with tail sprites
+            for (0..swarm.tail_count) |i| {
+                if (checkCollisionShip(
+                    self.player.ship.sprite_ship,
+                    swarm.tail_sprites[i],
+                    1,
+                    11,
+                    coll_inset,
+                )) {
+                    const pos_ship = self.player.ship.getCenterCoords();
+                    const tail_sprite = swarm.tail_sprites[i];
+                    const s_w: i32 = @as(i32, @intCast(tail_sprite.w));
+                    const s_h: i32 = @as(i32, @intCast(tail_sprite.h));
+                    const pos_tail = .{
+                        .x = tail_sprite.x + @divTrunc(s_w, 2),
+                        .y = tail_sprite.y + @divTrunc(s_h, 2),
+                    };
+                    var sign: i32 = 1;
+
+                    if (pos_ship.x < pos_tail.x) {
+                        sign = -1;
+                    }
+
+                    if (self.shields.active_shield == .None) {
+                        self.exodus(sign);
+                    } else {
+                        // Destroy swarm on shield collision
+                        swarm.active = false;
+                        for (0..swarm.tail_count) |j| {
+                            swarm.tail_pool.release(swarm.tail_sprites[j]);
+                        }
+                        swarm.tail_pool.release(swarm.master_sprite);
+
+                        // Explosion
+                        self.exploder.tryExplode(
+                            pos_tail.x,
+                            pos_tail.y,
+                            .Big,
+                        ) catch {};
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // -- Enemy collision with player bullets
+    pub fn doEnemyCollisions(self: *GameManager) void {
+        // Check default weapon against SingleEnemy
+        for (&self.player.weapon_manager.default_weapon.projectiles) |*proj| {
+            if (!proj.active) continue;
+
+            for (&self.enemies.active_single_enemies) |*enemy| {
+                if (!enemy.active) continue;
+
+                const coll_inset: i32 = 1;
+
+                if (checkCollision(proj.sprite, enemy.sprite, coll_inset)) {
+                    proj.release();
+                    const pos_proj = proj.getCenterCoords();
+
+                    // Small explosion at hit
+                    self.exploder.tryExplode(
+                        pos_proj.x,
+                        pos_proj.y,
+                        .Small,
+                    ) catch {};
+
+                    if (enemy.tryDestroy()) {
+                        const pos_enemy = enemy.getCenterCoords();
+
+                        // Big explosion when destroyed
+                        self.exploder.tryExplode(
+                            pos_enemy.x,
+                            pos_enemy.y,
+                            .Big,
+                        ) catch {};
+
+                        self.player.score += enemy.score;
+
+                        _ = self.props.spawnPointsBonus(
+                            pos_enemy.x - 6,
+                            pos_enemy.y - 3,
+                            enemy.score,
+                        ) catch {};
+
+                        self.checkScoreMilestones();
+                    }
+                }
+            }
+        }
+
+        // Check spread weapon against SingleEnemy
+        for (&self.player.weapon_manager.spread_weapon.projectiles) |*proj| {
+            if (!proj.active) continue;
+
+            for (&self.enemies.active_single_enemies) |*enemy| {
+                if (!enemy.active) continue;
+
+                const coll_inset: i32 = 1;
+
+                if (checkCollision(proj.sprite, enemy.sprite, coll_inset)) {
+                    proj.release();
+                    const pos_proj = proj.getCenterCoords();
+
+                    self.exploder.tryExplode(
+                        pos_proj.x,
+                        pos_proj.y,
+                        .SmallPurple,
+                    ) catch {};
+
+                    if (enemy.tryDestroy()) {
+                        const pos_enemy = enemy.getCenterCoords();
+
+                        self.exploder.tryExplode(
+                            pos_enemy.x,
+                            pos_enemy.y,
+                            .Big,
+                        ) catch {};
+
+                        self.player.score += enemy.score;
+
+                        _ = self.props.spawnPointsBonus(
+                            pos_enemy.x - 6,
+                            pos_enemy.y - 3,
+                            enemy.score,
+                        ) catch {};
+
+                        self.checkScoreMilestones();
+                    }
+                }
+            }
+        }
+
+        // Check default weapon against SwarmEnemy
+        for (&self.player.weapon_manager.default_weapon.projectiles) |*proj| {
+            if (!proj.active) continue;
+
+            for (&self.enemies.active_swarm_enemies) |*swarm| {
+                if (!swarm.active) continue;
+
+                const coll_inset: i32 = 1;
+                var hit = false;
+                var hit_pos_x: i32 = undefined;
+                var hit_pos_y: i32 = undefined;
+
+                // Check master
+                if (checkCollision(proj.sprite, swarm.master_sprite, coll_inset)) {
+                    hit = true;
+                    const center = swarm.getCenterCoords();
+                    hit_pos_x = center.x;
+                    hit_pos_y = center.y;
+                }
+
+                // Check tail sprites
+                if (!hit) {
+                    for (0..swarm.tail_count) |i| {
+                        if (checkCollision(proj.sprite, swarm.tail_sprites[i], coll_inset)) {
+                            hit = true;
+                            const tail_sprite = swarm.tail_sprites[i];
+                            const s_w: i32 = @as(i32, @intCast(tail_sprite.w));
+                            const s_h: i32 = @as(i32, @intCast(tail_sprite.h));
+                            hit_pos_x = tail_sprite.x + @divTrunc(s_w, 2);
+                            hit_pos_y = tail_sprite.y + @divTrunc(s_h, 2);
+                            break;
+                        }
+                    }
+                }
+
+                if (hit) {
+                    proj.release();
+                    const pos_proj = proj.getCenterCoords();
+
+                    self.exploder.tryExplode(
+                        pos_proj.x,
+                        pos_proj.y,
+                        .Small,
+                    ) catch {};
+
+                    if (swarm.tryDestroy()) {
+                        // Get all positions before destroying
+                        const positions = swarm.getAllSpritePositions();
+
+                        // Explosion for each sprite
+                        for (0..(swarm.tail_count + 1)) |i| {
+                            self.exploder.tryExplode(
+                                positions[i].x,
+                                positions[i].y,
+                                .Big,
+                            ) catch {};
+                        }
+
+                        self.player.score += swarm.score;
+
+                        _ = self.props.spawnPointsBonus(
+                            hit_pos_x - 6,
+                            hit_pos_y - 3,
+                            swarm.score,
+                        ) catch {};
+
+                        self.checkScoreMilestones();
+                    }
+                }
+            }
+        }
+
+        // Check spread weapon against SwarmEnemy
+        for (&self.player.weapon_manager.spread_weapon.projectiles) |*proj| {
+            if (!proj.active) continue;
+
+            for (&self.enemies.active_swarm_enemies) |*swarm| {
+                if (!swarm.active) continue;
+
+                const coll_inset: i32 = 1;
+                var hit = false;
+                var hit_pos_x: i32 = undefined;
+                var hit_pos_y: i32 = undefined;
+
+                // Check master
+                if (checkCollision(proj.sprite, swarm.master_sprite, coll_inset)) {
+                    hit = true;
+                    const center = swarm.getCenterCoords();
+                    hit_pos_x = center.x;
+                    hit_pos_y = center.y;
+                }
+
+                // Check tail sprites
+                if (!hit) {
+                    for (0..swarm.tail_count) |i| {
+                        if (checkCollision(proj.sprite, swarm.tail_sprites[i], coll_inset)) {
+                            hit = true;
+                            const tail_sprite = swarm.tail_sprites[i];
+                            const s_w: i32 = @as(i32, @intCast(tail_sprite.w));
+                            const s_h: i32 = @as(i32, @intCast(tail_sprite.h));
+                            hit_pos_x = tail_sprite.x + @divTrunc(s_w, 2);
+                            hit_pos_y = tail_sprite.y + @divTrunc(s_h, 2);
+                            break;
+                        }
+                    }
+                }
+
+                if (hit) {
+                    proj.release();
+                    const pos_proj = proj.getCenterCoords();
+
+                    self.exploder.tryExplode(
+                        pos_proj.x,
+                        pos_proj.y,
+                        .SmallPurple,
+                    ) catch {};
+
+                    if (swarm.tryDestroy()) {
+                        // Get all positions before destroying
+                        const positions = swarm.getAllSpritePositions();
+
+                        // Explosion for each sprite
+                        for (0..(swarm.tail_count + 1)) |i| {
+                            self.exploder.tryExplode(
+                                positions[i].x,
+                                positions[i].y,
+                                .Big,
+                            ) catch {};
+                        }
+
+                        self.player.score += swarm.score;
+
+                        _ = self.props.spawnPointsBonus(
+                            hit_pos_x - 6,
+                            hit_pos_y - 3,
+                            swarm.score,
+                        ) catch {};
+
+                        self.checkScoreMilestones();
+                    }
+                }
+            }
         }
     }
 };
