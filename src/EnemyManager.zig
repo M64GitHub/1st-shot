@@ -99,7 +99,7 @@ pub const SwarmEnemy = struct {
     start_x: i32 = 0,
     active: bool = false,
     score: u32 = 500,
-    tail_count: usize = 6, // Active tail sprites (not including master)
+    tail_count: usize = 4, // Active tail sprites (not including master)
     tail_spacing: i32 = 2, // Vertical distance between sprites
     wave: TrigWave = undefined,
     global_wave: TrigWave = undefined, // Global offset for all enemies
@@ -306,7 +306,7 @@ pub const EnemyManager = struct {
 
     pub fn getCurrentTailSize(self: *EnemyManager) usize {
         // Start at 6, increase by 1 every 1000 frames, max 16
-        const base_size: usize = 6;
+        const base_size: usize = 3;
         const growth = self.update_count / 1000;
         return @min(base_size + growth, 16);
     }
