@@ -108,13 +108,18 @@ pub const SwarmEnemy = struct {
             self.y += 1; // move downward
         }
 
-        // Update master position with zigzag
-        self.x = self.start_x + self.wave.tickSine();
+        // Get current tick before we increment it
+        const current_tick = self.wave.tick;
+
+        // Update master position with zigzag (1/4 amplitude)
+        const master_amplitude = @divTrunc(self.wave.amplitude, 4);
+        const master_offset_x = movy.animation.trig.sine(current_tick, self.wave.duration, master_amplitude);
+        self.x = self.start_x + master_offset_x;
 
         self.master_sprite.stepActiveAnimation();
         self.master_sprite.setXY(self.x, self.y);
 
-        // Update tail sprites - they follow with phase offset
+        // Update tail sprites - they follow with phase offset and increasing amplitude
         for (0..self.tail_count) |i| {
             const tail_sprite = self.tail_sprites[i];
             tail_sprite.stepActiveAnimation();
@@ -125,10 +130,21 @@ pub const SwarmEnemy = struct {
             // Phase offset for the wave - each tail is behind in the wave cycle
             // We calculate how far behind based on spacing
             const phase_offset = @as(usize, @intCast(self.tail_spacing * @as(i32, @intCast(i + 1))));
-            const offset_x = self.start_x + self.calculateOffsetSine(phase_offset);
+
+            // Calculate graduated amplitude: increases from 1/4 at master to full at last tail
+            // Formula: amplitude = base_amplitude * (1/4 + 3/4 * (i+1) / tail_count)
+            // This gives us a linear progression from 25% to 100%
+            const tail_index = i + 1; // 1 to tail_count
+            const amplitude_factor = @divTrunc(self.wave.amplitude * 3 * @as(i32, @intCast(tail_index)), @as(i32, @intCast(self.tail_count)) * 4);
+            const tail_amplitude = master_amplitude + amplitude_factor;
+
+            const offset_x = self.start_x + self.calculateSineWithAmplitude(current_tick, phase_offset, tail_amplitude);
 
             tail_sprite.setXY(offset_x, offset_y);
         }
+
+        // Advance the wave tick for next frame
+        self.wave.tick = (self.wave.tick + 1) % self.wave.duration;
 
         // Deactivate if master is off-screen (check bottom mainly)
         if (self.y > @as(i32, @intCast(self.screen.h)) + (@as(i32, @intCast(self.tail_count)) * self.tail_spacing)) {
@@ -136,15 +152,14 @@ pub const SwarmEnemy = struct {
         }
     }
 
-    fn calculateOffsetSine(self: *SwarmEnemy, phase_offset: usize) i32 {
-        // Calculate the tick value for a tail sprite based on phase offset
-        const current_tick = self.wave.tick;
+    fn calculateSineWithAmplitude(self: *SwarmEnemy, current_tick: usize, phase_offset: usize, amplitude: i32) i32 {
+        // Calculate the tick value for a sprite based on phase offset
         const offset_tick = if (current_tick >= phase_offset)
             current_tick - phase_offset
         else
             self.wave.duration + current_tick - (phase_offset % self.wave.duration);
 
-        return movy.animation.trig.sine(offset_tick, self.wave.duration, self.wave.amplitude);
+        return movy.animation.trig.sine(offset_tick, self.wave.duration, amplitude);
     }
 
     pub fn getCenterCoords(self: *SwarmEnemy) struct { x: i32, y: i32 } {
