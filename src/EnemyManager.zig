@@ -111,15 +111,14 @@ pub const SwarmEnemy = struct {
         // Get current tick before we increment it
         const current_tick = self.wave.tick;
 
-        // Update master position with zigzag (1/4 amplitude)
-        const master_amplitude = @divTrunc(self.wave.amplitude, 4);
-        const master_offset_x = movy.animation.trig.sine(current_tick, self.wave.duration, master_amplitude);
+        // Update master position with zigzag (full amplitude)
+        const master_offset_x = movy.animation.trig.sine(current_tick, self.wave.duration, self.wave.amplitude);
         self.x = self.start_x + master_offset_x;
 
         self.master_sprite.stepActiveAnimation();
         self.master_sprite.setXY(self.x, self.y);
 
-        // Update tail sprites - they follow with phase offset and increasing amplitude
+        // Update tail sprites - they follow with phase offset and decreasing amplitude
         for (0..self.tail_count) |i| {
             const tail_sprite = self.tail_sprites[i];
             tail_sprite.stepActiveAnimation();
@@ -131,12 +130,12 @@ pub const SwarmEnemy = struct {
             // We calculate how far behind based on spacing
             const phase_offset = @as(usize, @intCast(self.tail_spacing * @as(i32, @intCast(i + 1))));
 
-            // Calculate graduated amplitude: increases from 1/4 at master to full at last tail
-            // Formula: amplitude = base_amplitude * (1/4 + 3/4 * (i+1) / tail_count)
-            // This gives us a linear progression from 25% to 100%
+            // Calculate graduated amplitude: decreases from full at master to 1/4 at last tail
+            // Formula: amplitude = base_amplitude * (1 - 3/4 * (i+1) / tail_count)
+            // This gives us a linear progression from 100% to 25%
             const tail_index = i + 1; // 1 to tail_count
-            const amplitude_factor = @divTrunc(self.wave.amplitude * 3 * @as(i32, @intCast(tail_index)), @as(i32, @intCast(self.tail_count)) * 4);
-            const tail_amplitude = master_amplitude + amplitude_factor;
+            const amplitude_reduction = @divTrunc(self.wave.amplitude * 3 * @as(i32, @intCast(tail_index)), @as(i32, @intCast(self.tail_count)) * 4);
+            const tail_amplitude = self.wave.amplitude - amplitude_reduction;
 
             const offset_x = self.start_x + self.calculateSineWithAmplitude(current_tick, phase_offset, tail_amplitude);
 
@@ -222,8 +221,8 @@ pub const EnemyManager = struct {
     single_spawn_cooldown: usize = 0,
     single_spawn_interval: usize = 300,
     swarm_spawn_cooldown: usize = 0,
-    swarm_spawn_interval: usize = 1000,
-    swarm_unlock_frame: usize = 2000,
+    swarm_spawn_interval: usize = 200,
+    swarm_unlock_frame: usize = 200,
 
     // Configuration
     max_single_concurrent: usize = 2,
@@ -320,7 +319,7 @@ pub const EnemyManager = struct {
 
         if (movement_type == .Zigzag) {
             const duration = self.rng.random().intRangeAtMost(usize, 60, 90);
-            const amplitude = self.rng.random().intRangeAtMost(i32, 10, 25);
+            const amplitude = self.rng.random().intRangeAtMost(i32, 20, 60);
             wave = TrigWave.init(duration, amplitude);
         }
 
@@ -384,9 +383,9 @@ pub const EnemyManager = struct {
                 }
 
                 // Random zigzag parameters
-                const duration = self.rng.random().intRangeAtMost(usize, 60, 180);
-                const amplitude = self.rng.random().intRangeAtMost(i32, 40, 60);
-                const spacing = self.rng.random().intRangeAtMost(i32, 2, 8);
+                const duration = self.rng.random().intRangeAtMost(usize, 60, 120);
+                const amplitude = self.rng.random().intRangeAtMost(i32, 80, 100);
+                const spacing = self.rng.random().intRangeAtMost(i32, 4, 8);
 
                 // Random speed
                 const min_speed: usize = 25;
