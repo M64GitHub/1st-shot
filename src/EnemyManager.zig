@@ -26,6 +26,7 @@ pub const SingleEnemy = struct {
     score: u32 = 250,
     movement_type: MovementType = .Straight,
     wave: TrigWave = undefined,
+    global_wave: TrigWave = undefined, // Global offset for all enemies
 
     speed_adder: usize = 0,
     speed_value: usize = 0,
@@ -38,13 +39,18 @@ pub const SingleEnemy = struct {
             self.y += 1; // move downward
         }
 
+        // Calculate global offset (applies to all enemies)
+        const global_offset = self.global_wave.tickSine();
+
         // Update x position based on movement type
         switch (self.movement_type) {
             .Straight => {
-                // x stays the same
+                // Only global wave movement
+                self.x = self.start_x + global_offset;
             },
             .Zigzag => {
-                self.x = self.start_x + self.wave.tickSine();
+                // Zigzag wave + global wave
+                self.x = self.start_x + self.wave.tickSine() + global_offset;
             },
         }
 
@@ -96,6 +102,7 @@ pub const SwarmEnemy = struct {
     tail_count: usize = 6, // Active tail sprites (not including master)
     tail_spacing: i32 = 2, // Vertical distance between sprites
     wave: TrigWave = undefined,
+    global_wave: TrigWave = undefined, // Global offset for all enemies
 
     speed_adder: usize = 0,
     speed_value: usize = 0,
@@ -111,9 +118,12 @@ pub const SwarmEnemy = struct {
         // Get current tick before we increment it
         const current_tick = self.wave.tick;
 
-        // Update master position with zigzag (full amplitude)
+        // Calculate global offset (applies to entire swarm)
+        const global_offset = self.global_wave.tickSine();
+
+        // Update master position with zigzag (full amplitude) + global offset
         const master_offset_x = movy.animation.trig.sine(current_tick, self.wave.duration, self.wave.amplitude);
-        self.x = self.start_x + master_offset_x;
+        self.x = self.start_x + master_offset_x + global_offset;
 
         self.master_sprite.stepActiveAnimation();
         self.master_sprite.setXY(self.x, self.y);
@@ -137,7 +147,7 @@ pub const SwarmEnemy = struct {
             const amplitude_reduction = @divTrunc(self.wave.amplitude * 3 * @as(i32, @intCast(tail_index)), @as(i32, @intCast(self.tail_count)) * 4);
             const tail_amplitude = self.wave.amplitude - amplitude_reduction;
 
-            const offset_x = self.start_x + self.calculateSineWithAmplitude(current_tick, phase_offset, tail_amplitude);
+            const offset_x = self.start_x + self.calculateSineWithAmplitude(current_tick, phase_offset, tail_amplitude) + global_offset;
 
             tail_sprite.setXY(offset_x, offset_y);
         }
@@ -323,6 +333,11 @@ pub const EnemyManager = struct {
             wave = TrigWave.init(duration, amplitude);
         }
 
+        // Random global wave parameters (applies to all enemies)
+        const global_duration = self.rng.random().intRangeAtMost(usize, 150, 180);
+        const global_amplitude = self.rng.random().intRangeAtMost(i32, 20, 40);
+        const global_wave = TrigWave.init(global_duration, global_amplitude);
+
         try sprite.startAnimation("fly");
         sprite.setXY(x, y);
 
@@ -338,6 +353,7 @@ pub const EnemyManager = struct {
                     .active = true,
                     .movement_type = movement_type,
                     .wave = wave,
+                    .global_wave = global_wave,
 
                     .speed_adder = self.rng.random().intRangeAtMost(
                         usize,
@@ -387,6 +403,10 @@ pub const EnemyManager = struct {
                 const amplitude = self.rng.random().intRangeAtMost(i32, 80, 100);
                 const spacing = self.rng.random().intRangeAtMost(i32, 4, 8);
 
+                // Random global wave parameters (applies to entire swarm)
+                const global_duration = self.rng.random().intRangeAtMost(usize, 150, 180);
+                const global_amplitude = self.rng.random().intRangeAtMost(i32, 20, 40);
+
                 // Random speed
                 const min_speed: usize = 25;
                 const max_speed: usize = 45;
@@ -410,6 +430,7 @@ pub const EnemyManager = struct {
                     .tail_count = tail_size,
                     .tail_spacing = spacing,
                     .wave = TrigWave.init(duration, amplitude),
+                    .global_wave = TrigWave.init(global_duration, global_amplitude),
 
                     .speed_adder = self.rng.random().intRangeAtMost(
                         usize,
