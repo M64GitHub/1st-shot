@@ -25,7 +25,9 @@ pub const LaunchedProjectile = struct {
     velocity_y: i32 = 0,
     active: bool = false,
     ever_used: bool = false, // Track if this slot was ever initialized
+    orphaned: bool = false, // True when parent ShooterEnemy is destroyed
     screen: *movy.Screen = undefined,
+    sprite_pool: *movy.graphic.SpritePool = undefined, // Reference to pool for cleanup
 
     speed_adder: usize = 0,
     speed_value: usize = 0,
@@ -50,6 +52,13 @@ pub const LaunchedProjectile = struct {
             self.x < -@as(i32, @intCast(self.sprite.w)))
         {
             self.active = false;
+
+            // If orphaned, release sprite back to pool since parent is gone
+            if (self.orphaned) {
+                self.sprite_pool.release(self.sprite);
+                self.ever_used = false;
+                self.orphaned = false;
+            }
         }
     }
 
@@ -99,6 +108,11 @@ pub const ShooterEnemy = struct {
         player_center: PlayerCenter,
         rng: *std.Random.DefaultPrng,
     ) void {
+        // Always update launched projectiles, even if parent is destroyed
+        for (&self.launched_projectiles) |*proj| {
+            proj.update();
+        }
+
         if (!self.active) return;
 
         // Move downward
@@ -124,11 +138,6 @@ pub const ShooterEnemy = struct {
         if (self.right_projectile) |right| {
             right.stepActiveAnimation();
             right.setXY(self.x + 14, self.y);
-        }
-
-        // Update launched projectiles
-        for (&self.launched_projectiles) |*proj| {
-            proj.update();
         }
 
         // State machine
@@ -213,7 +222,9 @@ pub const ShooterEnemy = struct {
                     .velocity_y = vel_y,
                     .active = true,
                     .ever_used = true,
+                    .orphaned = false,
                     .screen = self.screen,
+                    .sprite_pool = self.projectile_pool,
                     .speed_adder = 100, // Move every frame
                     .speed_threshold = 100,
                     .speed_value = 0,
@@ -264,24 +275,86 @@ pub const ShooterEnemy = struct {
         // Release master sprite
         master_pool.release(self.master_sprite);
 
-        // Release attached projectiles (if they haven't been launched)
-        if (self.left_projectile) |left| {
-            projectile_pool.release(left);
-            self.left_projectile = null;
+        // Convert attached projectiles into orphaned projectiles falling downward
+        // This makes them continue flying instead of disappearing
+        if (self.left_projectile) |left_sprite| {
+            // Find an inactive slot for the orphaned projectile (can reuse old slots)
+            var found_slot = false;
+            for (&self.launched_projectiles) |*launched| {
+                if (!launched.active) {
+                    found_slot = true;
+                    launched.* = LaunchedProjectile{
+                        .sprite = left_sprite,
+                        .x = self.x - 10,
+                        .y = self.y,
+                        .velocity_x = 0,
+                        .velocity_y = 2, // Fall straight down
+                        .active = true,
+                        .ever_used = true,
+                        .orphaned = true, // Mark as orphaned immediately
+                        .screen = self.screen,
+                        .sprite_pool = self.projectile_pool,
+                        .speed_adder = 100,
+                        .speed_threshold = 100,
+                        .speed_value = 0,
+                    };
+                    self.left_projectile = null;
+                    break;
+                }
+            }
+
+            // If no slot available, release the sprite
+            if (self.left_projectile != null) {
+                projectile_pool.release(left_sprite);
+                self.left_projectile = null;
+            }
         }
-        if (self.right_projectile) |right| {
-            projectile_pool.release(right);
-            self.right_projectile = null;
+        if (self.right_projectile) |right_sprite| {
+            // Find an inactive slot for the orphaned projectile (can reuse old slots)
+            var found_slot = false;
+            for (&self.launched_projectiles) |*launched| {
+                if (!launched.active) {
+                    found_slot = true;
+                    launched.* = LaunchedProjectile{
+                        .sprite = right_sprite,
+                        .x = self.x + 14,
+                        .y = self.y,
+                        .velocity_x = 0,
+                        .velocity_y = 2, // Fall straight down
+                        .active = true,
+                        .ever_used = true,
+                        .orphaned = true, // Mark as orphaned immediately
+                        .screen = self.screen,
+                        .sprite_pool = self.projectile_pool,
+                        .speed_adder = 100,
+                        .speed_threshold = 100,
+                        .speed_value = 0,
+                    };
+                    self.right_projectile = null;
+                    break;
+                }
+            }
+
+            // If no slot available, release the sprite
+            if (self.right_projectile != null) {
+                projectile_pool.release(right_sprite);
+                self.right_projectile = null;
+            }
         }
 
-        // Release launched projectiles back to pool
-        // IMPORTANT: Release ALL launched projectiles that were ever used, not just active ones!
-        // Inactive projectiles still hold sprite references that need to be freed
+        // Mark launched projectiles as orphaned so they can clean themselves up
+        // Active projectiles will continue flying and release their sprites when off-screen
+        // Inactive projectiles need immediate cleanup
         for (&self.launched_projectiles) |*launched| {
             if (launched.ever_used) {
-                projectile_pool.release(launched.sprite);
-                launched.active = false;
-                launched.ever_used = false;
+                if (launched.active) {
+                    // Let active projectiles continue flying
+                    launched.orphaned = true;
+                } else {
+                    // Inactive projectiles can be cleaned up immediately
+                    projectile_pool.release(launched.sprite);
+                    launched.ever_used = false;
+                }
             }
         }
 

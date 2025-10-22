@@ -238,13 +238,13 @@ pub const EnemyManager = struct {
 
     // Spawning state
     single_spawn_cooldown: usize = 0,
-    single_spawn_interval: usize = 300,
+    single_spawn_interval: usize = 600,
     swarm_spawn_cooldown: usize = 0,
-    swarm_spawn_interval: usize = 200,
-    swarm_unlock_frame: usize = 2000,
+    swarm_spawn_interval: usize = 700,
+    swarm_unlock_frame: usize = 1000,
     shooter_spawn_cooldown: usize = 0,
-    shooter_spawn_interval: usize = 300,
-    shooter_unlock_frame: usize = 300,
+    shooter_spawn_interval: usize = 1500,
+    shooter_unlock_frame: usize = 2000,
 
     // Configuration
     max_single_concurrent: usize = 2,
@@ -538,10 +538,22 @@ pub const EnemyManager = struct {
         left_proj.setXY(x - 10, y);
         right_proj.setXY(x + 14, y);
 
-        // Find an inactive shooter slot
+        // Find an inactive shooter slot that doesn't have orphaned projectiles
         // Cleanup happens before spawning, so any inactive slot is safe to reuse
         for (&self.active_shooter_enemies) |*shooter| {
             if (!shooter.active) {
+                // Check if this slot has orphaned projectiles still flying
+                var has_orphans = false;
+                for (shooter.launched_projectiles) |proj| {
+                    if (proj.orphaned and proj.active) {
+                        has_orphans = true;
+                        break;
+                    }
+                }
+
+                // Only reuse slots that are completely clean
+                if (has_orphans) continue;
+
                 shooter.* = ShooterEnemy{
                     .master_sprite = master,
                     .left_projectile = left_proj,
@@ -565,7 +577,7 @@ pub const EnemyManager = struct {
                     .speed_value = 0,
 
                     .damage = 0,
-                    .damage_threshold = 2,
+                    .damage_threshold = 1,
                     .score = 350,
                 };
                 return;
@@ -608,9 +620,8 @@ pub const EnemyManager = struct {
 
         // Update and cleanup ShooterEnemies
         for (&self.active_shooter_enemies) |*shooter| {
-            if (shooter.active) {
-                shooter.update(player_center, &self.rng);
-            }
+            // ALWAYS update, even if inactive, to keep orphaned projectiles moving
+            shooter.update(player_center, &self.rng);
 
             // Clean up sprites for any inactive shooter that hasn't been cleaned up yet
             if (!shooter.active and !shooter.sprites_released) {
@@ -749,16 +760,17 @@ pub const EnemyManager = struct {
 
         // Render ShooterEnemies (launched projectiles first, then master, then attached projectiles)
         for (&self.active_shooter_enemies) |*shooter| {
-            if (shooter.active) {
-                // Render launched projectiles first (background)
-                for (&shooter.launched_projectiles) |*proj| {
-                    if (proj.active) {
-                        try self.screen.addRenderSurface(
-                            try proj.sprite.getCurrentFrameSurface(),
-                        );
-                    }
+            // Always render launched projectiles, even if shooter is inactive (for orphans)
+            for (&shooter.launched_projectiles) |*proj| {
+                if (proj.active) {
+                    try self.screen.addRenderSurface(
+                        try proj.sprite.getCurrentFrameSurface(),
+                    );
                 }
+            }
 
+            // Only render master and attached projectiles if shooter is active
+            if (shooter.active) {
                 // Render master
                 try self.screen.addRenderSurface(
                     try shooter.master_sprite.getCurrentFrameSurface(),
