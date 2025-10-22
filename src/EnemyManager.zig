@@ -577,7 +577,7 @@ pub const EnemyManager = struct {
                     .speed_value = 0,
 
                     .damage = 0,
-                    .damage_threshold = 1,
+                    .damage_threshold = 3,
                     .score = 350,
                 };
                 return;

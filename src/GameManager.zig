@@ -1269,9 +1269,53 @@ pub const GameManager = struct {
     // -- ShooterEnemy collision with player ship
     pub fn doShooterEnemyShipCollision(self: *GameManager) void {
         for (&self.enemies.active_shooter_enemies) |*shooter| {
-            if (!shooter.active) continue;
-
             const coll_inset: i32 = 1;
+
+            // Check collision with launched projectiles (including orphaned ones)
+            // This must be checked ALWAYS, even if shooter is inactive (for orphaned projectiles)
+            for (&shooter.launched_projectiles) |*launched| {
+                if (!launched.active) continue;
+
+                if (checkCollisionShip(
+                    self.player.ship.sprite_ship,
+                    launched.sprite,
+                    1,
+                    11,
+                    coll_inset,
+                )) {
+                    const pos_ship = self.player.ship.getCenterCoords();
+                    const pos_launched = launched.getCenterCoords();
+                    var sign: i32 = 1;
+
+                    if (pos_ship.x < pos_launched.x) {
+                        sign = -1;
+                    }
+
+                    if (self.shields.active_shield == .None) {
+                        self.exodus(sign);
+                    } else {
+                        // Deactivate launched projectile on shield hit
+                        launched.active = false;
+
+                        // If orphaned, release sprite since parent is gone
+                        if (launched.orphaned) {
+                            launched.sprite_pool.release(launched.sprite);
+                            launched.ever_used = false;
+                            launched.orphaned = false;
+                        }
+
+                        self.exploder.tryExplode(
+                            pos_launched.x,
+                            pos_launched.y,
+                            .Small,
+                        ) catch {};
+                    }
+                    break;
+                }
+            }
+
+            // Skip remaining checks if shooter is inactive (master and attached projectiles)
+            if (!shooter.active) continue;
 
             // Check collision with master sprite
             if (checkCollisionShip(
@@ -1379,40 +1423,6 @@ pub const GameManager = struct {
                         ) catch {};
                     }
                     continue;
-                }
-            }
-
-            // Check collision with launched projectiles
-            for (&shooter.launched_projectiles) |*launched| {
-                if (!launched.active) continue;
-
-                if (checkCollisionShip(
-                    self.player.ship.sprite_ship,
-                    launched.sprite,
-                    1,
-                    11,
-                    coll_inset,
-                )) {
-                    const pos_ship = self.player.ship.getCenterCoords();
-                    const pos_launched = launched.getCenterCoords();
-                    var sign: i32 = 1;
-
-                    if (pos_ship.x < pos_launched.x) {
-                        sign = -1;
-                    }
-
-                    if (self.shields.active_shield == .None) {
-                        self.exodus(sign);
-                    } else {
-                        // Deactivate launched projectile on shield hit
-                        launched.active = false;
-                        self.exploder.tryExplode(
-                            pos_launched.x,
-                            pos_launched.y,
-                            .Small,
-                        ) catch {};
-                    }
-                    break;
                 }
             }
         }
