@@ -1429,12 +1429,14 @@ pub const GameManager = struct {
 
                 const coll_inset: i32 = 1;
                 var hit = false;
+                var hit_projectile = false; // Track if we hit a projectile vs master
                 var hit_pos_x: i32 = undefined;
                 var hit_pos_y: i32 = undefined;
 
                 // Check master
                 if (checkCollision(proj.sprite, shooter.master_sprite, coll_inset)) {
                     hit = true;
+                    hit_projectile = false;
                     const center = shooter.getCenterCoords();
                     hit_pos_x = center.x;
                     hit_pos_y = center.y;
@@ -1445,6 +1447,7 @@ pub const GameManager = struct {
                     if (shooter.left_projectile) |left_proj| {
                         if (checkCollision(proj.sprite, left_proj, coll_inset)) {
                             hit = true;
+                            hit_projectile = true;
                             const s_w: i32 = @as(i32, @intCast(left_proj.w));
                             const s_h: i32 = @as(i32, @intCast(left_proj.h));
                             hit_pos_x = left_proj.x + @divTrunc(s_w, 2);
@@ -1457,6 +1460,7 @@ pub const GameManager = struct {
                     if (shooter.right_projectile) |right_proj| {
                         if (checkCollision(proj.sprite, right_proj, coll_inset)) {
                             hit = true;
+                            hit_projectile = true;
                             const s_w: i32 = @as(i32, @intCast(right_proj.w));
                             const s_h: i32 = @as(i32, @intCast(right_proj.h));
                             hit_pos_x = right_proj.x + @divTrunc(s_w, 2);
@@ -1475,7 +1479,9 @@ pub const GameManager = struct {
                         .Small,
                     ) catch {};
 
-                    if (shooter.tryDestroy()) {
+                    // reverted: Hitting a projectile deals more damage (instant kill with threshold 2)
+                    const damage = if (hit_projectile) @as(usize, 1) else @as(usize, 1);
+                    if (shooter.tryDestroyWithDamage(damage)) {
                         const pos_shooter = shooter.getCenterCoords();
 
                         // Release sprites
@@ -1511,12 +1517,14 @@ pub const GameManager = struct {
 
                 const coll_inset: i32 = 1;
                 var hit = false;
+                var hit_projectile = false; // Track if we hit a projectile vs master
                 var hit_pos_x: i32 = undefined;
                 var hit_pos_y: i32 = undefined;
 
                 // Check master
                 if (checkCollision(proj.sprite, shooter.master_sprite, coll_inset)) {
                     hit = true;
+                    hit_projectile = false;
                     const center = shooter.getCenterCoords();
                     hit_pos_x = center.x;
                     hit_pos_y = center.y;
@@ -1527,6 +1535,7 @@ pub const GameManager = struct {
                     if (shooter.left_projectile) |left_proj| {
                         if (checkCollision(proj.sprite, left_proj, coll_inset)) {
                             hit = true;
+                            hit_projectile = true;
                             const s_w: i32 = @as(i32, @intCast(left_proj.w));
                             const s_h: i32 = @as(i32, @intCast(left_proj.h));
                             hit_pos_x = left_proj.x + @divTrunc(s_w, 2);
@@ -1539,6 +1548,7 @@ pub const GameManager = struct {
                     if (shooter.right_projectile) |right_proj| {
                         if (checkCollision(proj.sprite, right_proj, coll_inset)) {
                             hit = true;
+                            hit_projectile = true;
                             const s_w: i32 = @as(i32, @intCast(right_proj.w));
                             const s_h: i32 = @as(i32, @intCast(right_proj.h));
                             hit_pos_x = right_proj.x + @divTrunc(s_w, 2);
@@ -1557,7 +1567,9 @@ pub const GameManager = struct {
                         .SmallPurple,
                     ) catch {};
 
-                    if (shooter.tryDestroy()) {
+                    // Hitting a projectile deals more damage (instant kill with threshold 2)
+                    const damage = if (hit_projectile) @as(usize, 2) else @as(usize, 1);
+                    if (shooter.tryDestroyWithDamage(damage)) {
                         const pos_shooter = shooter.getCenterCoords();
 
                         // Release sprites

@@ -508,34 +508,17 @@ pub const EnemyManager = struct {
         x: i32,
         y: i32,
     ) !void {
-        // Debug logging
-        const log_file = std.fs.cwd().createFile("shooter_debug.log", .{ .truncate = false }) catch return;
-        defer log_file.close();
-        log_file.seekFromEnd(0) catch {};
-
-        var buf: [256]u8 = undefined;
-        const msg = std.fmt.bufPrint(&buf, "Frame {d}: Trying to spawn ShooterEnemy\n", .{self.update_count}) catch return;
-        log_file.writeAll(msg) catch {};
-
         // Get master sprite
-        const master = self.shooter_master_pool.get() orelse {
-            const fail_msg = std.fmt.bufPrint(&buf, "Frame {d}: FAILED - No master sprite available!\n", .{self.update_count}) catch return;
-            log_file.writeAll(fail_msg) catch {};
-            return;
-        };
+        const master = self.shooter_master_pool.get() orelse return;
 
         // Get two projectile sprites
         const left_proj = self.shooter_projectile_pool.get() orelse {
             self.shooter_master_pool.release(master);
-            const fail_msg = std.fmt.bufPrint(&buf, "Frame {d}: FAILED - No left projectile sprite available!\n", .{self.update_count}) catch return;
-            log_file.writeAll(fail_msg) catch {};
             return;
         };
         const right_proj = self.shooter_projectile_pool.get() orelse {
             self.shooter_master_pool.release(master);
             self.shooter_projectile_pool.release(left_proj);
-            const fail_msg = std.fmt.bufPrint(&buf, "Frame {d}: FAILED - No right projectile sprite available!\n", .{self.update_count}) catch return;
-            log_file.writeAll(fail_msg) catch {};
             return;
         };
 
@@ -559,9 +542,6 @@ pub const EnemyManager = struct {
         // Cleanup happens before spawning, so any inactive slot is safe to reuse
         for (&self.active_shooter_enemies) |*shooter| {
             if (!shooter.active) {
-                const success_msg = std.fmt.bufPrint(&buf, "Frame {d}: SUCCESS - Spawned ShooterEnemy\n", .{self.update_count}) catch return;
-                log_file.writeAll(success_msg) catch {};
-
                 shooter.* = ShooterEnemy{
                     .master_sprite = master,
                     .left_projectile = left_proj,
@@ -585,7 +565,7 @@ pub const EnemyManager = struct {
                     .speed_value = 0,
 
                     .damage = 0,
-                    .damage_threshold = 10,
+                    .damage_threshold = 2,
                     .score = 350,
                 };
                 return;
@@ -593,9 +573,6 @@ pub const EnemyManager = struct {
         }
 
         // If we couldn't find a slot, release the sprites
-        const no_slot_msg = std.fmt.bufPrint(&buf, "Frame {d}: FAILED - No inactive shooter slot available!\n", .{self.update_count}) catch return;
-        log_file.writeAll(no_slot_msg) catch {};
-
         self.shooter_master_pool.release(master);
         self.shooter_projectile_pool.release(left_proj);
         self.shooter_projectile_pool.release(right_proj);

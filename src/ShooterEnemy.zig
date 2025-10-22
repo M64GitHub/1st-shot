@@ -85,7 +85,7 @@ pub const ShooterEnemy = struct {
     first_shot_side: ProjectileSide = .Left,
 
     damage: usize = 0,
-    damage_threshold: usize = 5,
+    damage_threshold: usize = 2,
     score: u32 = 350,
 
     global_wave: TrigWave = undefined,
@@ -241,8 +241,16 @@ pub const ShooterEnemy = struct {
     }
 
     pub fn tryDestroy(self: *ShooterEnemy) bool {
+        return self.tryDestroyWithDamage(1);
+    }
+
+    pub fn tryDestroyWithDamage(self: *ShooterEnemy, damage_amount: usize) bool {
         if (self.damage < self.damage_threshold) {
-            self.damage += 1;
+            self.damage += damage_amount;
+            if (self.damage >= self.damage_threshold) {
+                self.active = false;
+                return true;
+            }
             return false;
         }
         self.active = false;
@@ -252,14 +260,6 @@ pub const ShooterEnemy = struct {
     pub fn release(self: *ShooterEnemy, master_pool: *movy.graphic.SpritePool, projectile_pool: *movy.graphic.SpritePool) void {
         // Only release if we haven't already
         if (self.sprites_released) return;
-
-        // Debug logging
-        const log_file = std.fs.cwd().createFile("shooter_debug.log", .{ .truncate = false }) catch return;
-        defer log_file.close();
-        log_file.seekFromEnd(0) catch {};
-        var buf: [128]u8 = undefined;
-        const msg = std.fmt.bufPrint(&buf, "  RELEASE: Releasing ShooterEnemy sprites\n", .{}) catch return;
-        log_file.writeAll(msg) catch {};
 
         // Release master sprite
         master_pool.release(self.master_sprite);
