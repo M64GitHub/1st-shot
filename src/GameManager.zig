@@ -16,6 +16,7 @@ const Prop = @import("PropsManager.zig").Prop;
 const DropStacleManager = @import("DropStacleManager.zig").DropStacleManager;
 const DropStacleType = @import("DropStacleManager.zig").DropStacleType;
 const EnemyManager = @import("EnemyManager.zig").EnemyManager;
+const PlayerCenter = @import("EnemyManager.zig").PlayerCenter;
 
 const Lives = 3;
 const Points_For_Ammo: usize = 3000;
@@ -155,7 +156,8 @@ pub const GameManager = struct {
             .FadeIn => {
                 self.player.ship.visible = false;
                 try self.obstacles.update();
-                try self.enemies.update();
+                const player_center_pos = self.player.ship.getCenterCoords();
+                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
                 self.starfield.update();
                 try self.props.update();
                 try self.dropstacles.update();
@@ -185,14 +187,17 @@ pub const GameManager = struct {
                 );
                 try self.exploder.update();
                 try self.obstacles.update();
-                try self.enemies.update();
+                const player_center_pos = self.player.ship.getCenterCoords();
+                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
                 self.starfield.update();
                 try self.props.update();
                 try self.dropstacles.update();
                 self.doShipCollision();
                 self.doEnemyShipCollision();
+                self.doShooterEnemyShipCollision();
                 self.doProjectileCollisions();
                 self.doEnemyCollisions();
+                self.doShooterEnemyCollisions();
                 self.doDropStacleCollisions();
                 self.handlePropCollision();
                 self.handleDropCollision();
@@ -209,7 +214,8 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
-                try self.enemies.update();
+                const player_center_pos = self.player.ship.getCenterCoords();
+                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
@@ -227,7 +233,8 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
-                try self.enemies.update();
+                const player_center_pos = self.player.ship.getCenterCoords();
+                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
@@ -255,7 +262,8 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
-                try self.enemies.update();
+                const player_center_pos = self.player.ship.getCenterCoords();
+                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
@@ -266,7 +274,8 @@ pub const GameManager = struct {
                 try self.player.weapon_manager.update();
                 try self.exploder.update();
                 try self.obstacles.update();
-                try self.enemies.update();
+                const player_center_pos = self.player.ship.getCenterCoords();
+                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
@@ -314,8 +323,8 @@ pub const GameManager = struct {
         try self.shields.addRenderSurfaces();
         try self.props.addRenderSurfaces();
         try self.dropstacles.addRenderSurfaces();
-        try self.obstacles.addRenderSurfaces();
         try self.enemies.addRenderSurfaces();
+        try self.obstacles.addRenderSurfaces();
 
         try self.screen.addRenderSurface(self.starfield.out_surface);
         self.screen.render();
@@ -1248,6 +1257,325 @@ pub const GameManager = struct {
                             hit_pos_x - 6,
                             hit_pos_y - 3,
                             swarm.score,
+                        ) catch {};
+
+                        self.checkScoreMilestones();
+                    }
+                }
+            }
+        }
+    }
+
+    // -- ShooterEnemy collision with player ship
+    pub fn doShooterEnemyShipCollision(self: *GameManager) void {
+        for (&self.enemies.active_shooter_enemies) |*shooter| {
+            if (!shooter.active) continue;
+
+            const coll_inset: i32 = 1;
+
+            // Check collision with master sprite
+            if (checkCollisionShip(
+                self.player.ship.sprite_ship,
+                shooter.master_sprite,
+                1,
+                11,
+                coll_inset,
+            )) {
+                const pos_ship = self.player.ship.getCenterCoords();
+                const pos_shooter = shooter.getCenterCoords();
+                var sign: i32 = 1;
+
+                if (pos_ship.x < pos_shooter.x) {
+                    sign = -1;
+                }
+
+                if (self.shields.active_shield == .None) {
+                    self.exodus(sign);
+                } else {
+                    // Destroy shooter on shield collision and release sprites
+                    shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+
+                    // Explosion
+                    self.exploder.tryExplode(
+                        pos_shooter.x,
+                        pos_shooter.y,
+                        .Big,
+                    ) catch {};
+                }
+                continue;
+            }
+
+            // Check collision with attached projectiles
+            if (shooter.left_projectile) |left_proj| {
+                if (checkCollisionShip(
+                    self.player.ship.sprite_ship,
+                    left_proj,
+                    1,
+                    11,
+                    coll_inset,
+                )) {
+                    const pos_ship = self.player.ship.getCenterCoords();
+                    const s_w: i32 = @as(i32, @intCast(left_proj.w));
+                    const s_h: i32 = @as(i32, @intCast(left_proj.h));
+                    const pos_proj = .{
+                        .x = left_proj.x + @divTrunc(s_w, 2),
+                        .y = left_proj.y + @divTrunc(s_h, 2),
+                    };
+                    var sign: i32 = 1;
+
+                    if (pos_ship.x < pos_proj.x) {
+                        sign = -1;
+                    }
+
+                    if (self.shields.active_shield == .None) {
+                        self.exodus(sign);
+                    } else {
+                        // Destroy shooter on shield collision with attached projectile
+                        shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+
+                        // Explosion
+                        self.exploder.tryExplode(
+                            pos_proj.x,
+                            pos_proj.y,
+                            .Big,
+                        ) catch {};
+                    }
+                    continue;
+                }
+            }
+
+            if (shooter.right_projectile) |right_proj| {
+                if (checkCollisionShip(
+                    self.player.ship.sprite_ship,
+                    right_proj,
+                    1,
+                    11,
+                    coll_inset,
+                )) {
+                    const pos_ship = self.player.ship.getCenterCoords();
+                    const s_w: i32 = @as(i32, @intCast(right_proj.w));
+                    const s_h: i32 = @as(i32, @intCast(right_proj.h));
+                    const pos_proj = .{
+                        .x = right_proj.x + @divTrunc(s_w, 2),
+                        .y = right_proj.y + @divTrunc(s_h, 2),
+                    };
+                    var sign: i32 = 1;
+
+                    if (pos_ship.x < pos_proj.x) {
+                        sign = -1;
+                    }
+
+                    if (self.shields.active_shield == .None) {
+                        self.exodus(sign);
+                    } else {
+                        // Destroy shooter on shield collision with attached projectile
+                        shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+
+                        // Explosion
+                        self.exploder.tryExplode(
+                            pos_proj.x,
+                            pos_proj.y,
+                            .Big,
+                        ) catch {};
+                    }
+                    continue;
+                }
+            }
+
+            // Check collision with launched projectiles
+            for (&shooter.launched_projectiles) |*launched| {
+                if (!launched.active) continue;
+
+                if (checkCollisionShip(
+                    self.player.ship.sprite_ship,
+                    launched.sprite,
+                    1,
+                    11,
+                    coll_inset,
+                )) {
+                    const pos_ship = self.player.ship.getCenterCoords();
+                    const pos_launched = launched.getCenterCoords();
+                    var sign: i32 = 1;
+
+                    if (pos_ship.x < pos_launched.x) {
+                        sign = -1;
+                    }
+
+                    if (self.shields.active_shield == .None) {
+                        self.exodus(sign);
+                    } else {
+                        // Deactivate launched projectile on shield hit
+                        launched.active = false;
+                        self.exploder.tryExplode(
+                            pos_launched.x,
+                            pos_launched.y,
+                            .Small,
+                        ) catch {};
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    // -- ShooterEnemy collision with player bullets
+    pub fn doShooterEnemyCollisions(self: *GameManager) void {
+        // Check default weapon against ShooterEnemy
+        for (&self.player.weapon_manager.default_weapon.projectiles) |*proj| {
+            if (!proj.active) continue;
+
+            for (&self.enemies.active_shooter_enemies) |*shooter| {
+                if (!shooter.active) continue;
+
+                const coll_inset: i32 = 1;
+                var hit = false;
+                var hit_pos_x: i32 = undefined;
+                var hit_pos_y: i32 = undefined;
+
+                // Check master
+                if (checkCollision(proj.sprite, shooter.master_sprite, coll_inset)) {
+                    hit = true;
+                    const center = shooter.getCenterCoords();
+                    hit_pos_x = center.x;
+                    hit_pos_y = center.y;
+                }
+
+                // Check attached projectiles
+                if (!hit) {
+                    if (shooter.left_projectile) |left_proj| {
+                        if (checkCollision(proj.sprite, left_proj, coll_inset)) {
+                            hit = true;
+                            const s_w: i32 = @as(i32, @intCast(left_proj.w));
+                            const s_h: i32 = @as(i32, @intCast(left_proj.h));
+                            hit_pos_x = left_proj.x + @divTrunc(s_w, 2);
+                            hit_pos_y = left_proj.y + @divTrunc(s_h, 2);
+                        }
+                    }
+                }
+
+                if (!hit) {
+                    if (shooter.right_projectile) |right_proj| {
+                        if (checkCollision(proj.sprite, right_proj, coll_inset)) {
+                            hit = true;
+                            const s_w: i32 = @as(i32, @intCast(right_proj.w));
+                            const s_h: i32 = @as(i32, @intCast(right_proj.h));
+                            hit_pos_x = right_proj.x + @divTrunc(s_w, 2);
+                            hit_pos_y = right_proj.y + @divTrunc(s_h, 2);
+                        }
+                    }
+                }
+
+                if (hit) {
+                    proj.release();
+                    const pos_proj = proj.getCenterCoords();
+
+                    self.exploder.tryExplode(
+                        pos_proj.x,
+                        pos_proj.y,
+                        .Small,
+                    ) catch {};
+
+                    if (shooter.tryDestroy()) {
+                        const pos_shooter = shooter.getCenterCoords();
+
+                        // Release sprites
+                        shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+
+                        // Big explosion when destroyed
+                        self.exploder.tryExplode(
+                            pos_shooter.x,
+                            pos_shooter.y,
+                            .Big,
+                        ) catch {};
+
+                        self.player.score += shooter.score;
+
+                        _ = self.props.spawnPointsBonus(
+                            hit_pos_x - 6,
+                            hit_pos_y - 3,
+                            shooter.score,
+                        ) catch {};
+
+                        self.checkScoreMilestones();
+                    }
+                }
+            }
+        }
+
+        // Check spread weapon against ShooterEnemy
+        for (&self.player.weapon_manager.spread_weapon.projectiles) |*proj| {
+            if (!proj.active) continue;
+
+            for (&self.enemies.active_shooter_enemies) |*shooter| {
+                if (!shooter.active) continue;
+
+                const coll_inset: i32 = 1;
+                var hit = false;
+                var hit_pos_x: i32 = undefined;
+                var hit_pos_y: i32 = undefined;
+
+                // Check master
+                if (checkCollision(proj.sprite, shooter.master_sprite, coll_inset)) {
+                    hit = true;
+                    const center = shooter.getCenterCoords();
+                    hit_pos_x = center.x;
+                    hit_pos_y = center.y;
+                }
+
+                // Check attached projectiles
+                if (!hit) {
+                    if (shooter.left_projectile) |left_proj| {
+                        if (checkCollision(proj.sprite, left_proj, coll_inset)) {
+                            hit = true;
+                            const s_w: i32 = @as(i32, @intCast(left_proj.w));
+                            const s_h: i32 = @as(i32, @intCast(left_proj.h));
+                            hit_pos_x = left_proj.x + @divTrunc(s_w, 2);
+                            hit_pos_y = left_proj.y + @divTrunc(s_h, 2);
+                        }
+                    }
+                }
+
+                if (!hit) {
+                    if (shooter.right_projectile) |right_proj| {
+                        if (checkCollision(proj.sprite, right_proj, coll_inset)) {
+                            hit = true;
+                            const s_w: i32 = @as(i32, @intCast(right_proj.w));
+                            const s_h: i32 = @as(i32, @intCast(right_proj.h));
+                            hit_pos_x = right_proj.x + @divTrunc(s_w, 2);
+                            hit_pos_y = right_proj.y + @divTrunc(s_h, 2);
+                        }
+                    }
+                }
+
+                if (hit) {
+                    proj.release();
+                    const pos_proj = proj.getCenterCoords();
+
+                    self.exploder.tryExplode(
+                        pos_proj.x,
+                        pos_proj.y,
+                        .SmallPurple,
+                    ) catch {};
+
+                    if (shooter.tryDestroy()) {
+                        const pos_shooter = shooter.getCenterCoords();
+
+                        // Release sprites
+                        shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+
+                        // Big explosion when destroyed
+                        self.exploder.tryExplode(
+                            pos_shooter.x,
+                            pos_shooter.y,
+                            .Big,
+                        ) catch {};
+
+                        self.player.score += shooter.score;
+
+                        _ = self.props.spawnPointsBonus(
+                            hit_pos_x - 6,
+                            hit_pos_y - 3,
+                            shooter.score,
                         ) catch {};
 
                         self.checkScoreMilestones();

@@ -2,6 +2,7 @@ const std = @import("std");
 const movy = @import("movy");
 const Sprite = movy.graphic.Sprite;
 const TrigWave = movy.animation.TrigWave;
+const ShooterEnemy = @import("ShooterEnemy.zig").ShooterEnemy;
 
 pub const MovementType = enum {
     Straight,
@@ -9,6 +10,11 @@ pub const MovementType = enum {
 };
 
 pub const Position = struct {
+    x: i32,
+    y: i32,
+};
+
+pub const PlayerCenter = struct {
     x: i32,
     y: i32,
 };
@@ -221,8 +227,11 @@ pub const EnemyManager = struct {
     screen: *movy.Screen,
     single_enemy_pool: movy.graphic.SpritePool,
     swarm_enemy_pool: movy.graphic.SpritePool,
+    shooter_master_pool: movy.graphic.SpritePool,
+    shooter_projectile_pool: movy.graphic.SpritePool,
     active_single_enemies: [MaxSingleEnemies]SingleEnemy,
     active_swarm_enemies: [MaxSwarmEnemies]SwarmEnemy,
+    active_shooter_enemies: [MaxShooterEnemies]ShooterEnemy,
 
     // Frame tracking
     update_count: usize = 0,
@@ -232,15 +241,20 @@ pub const EnemyManager = struct {
     single_spawn_interval: usize = 300,
     swarm_spawn_cooldown: usize = 0,
     swarm_spawn_interval: usize = 200,
-    swarm_unlock_frame: usize = 200,
+    swarm_unlock_frame: usize = 2000,
+    shooter_spawn_cooldown: usize = 0,
+    shooter_spawn_interval: usize = 300,
+    shooter_unlock_frame: usize = 300,
 
     // Configuration
     max_single_concurrent: usize = 2,
+    max_shooter_concurrent: usize = 2,
 
     rng: std.Random.DefaultPrng,
 
     pub const MaxSingleEnemies = 8;
     pub const MaxSwarmEnemies = 4;
+    pub const MaxShooterEnemies = 4;
 
     pub fn init(
         allocator: std.mem.Allocator,
@@ -251,6 +265,8 @@ pub const EnemyManager = struct {
             .screen = screen,
             .single_enemy_pool = movy.graphic.SpritePool.init(allocator),
             .swarm_enemy_pool = movy.graphic.SpritePool.init(allocator),
+            .shooter_master_pool = movy.graphic.SpritePool.init(allocator),
+            .shooter_projectile_pool = movy.graphic.SpritePool.init(allocator),
             .active_single_enemies = [_]SingleEnemy{.{ .active = false }} ** MaxSingleEnemies,
             .active_swarm_enemies = [_]SwarmEnemy{
                 .{
@@ -258,6 +274,7 @@ pub const EnemyManager = struct {
                     .tail_pool = movy.graphic.SpritePool.init(allocator),
                 },
             } ** MaxSwarmEnemies,
+            .active_shooter_enemies = [_]ShooterEnemy{.{ .active = false }} ** MaxShooterEnemies,
             .rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp())),
         };
 
@@ -301,6 +318,42 @@ pub const EnemyManager = struct {
                 );
                 try swarm.tail_pool.addSprite(s);
             }
+        }
+
+        // Initialize ShooterEnemy master sprite pool
+        // Add surplus to handle edge cases
+        const shooter_master_path = "assets/enemy_shooter.png";
+        for (0..MaxShooterEnemies + 2) |_| { // +2 surplus
+            const s = try Sprite.initFromPng(
+                allocator,
+                shooter_master_path,
+                "shooter_master",
+            );
+            try s.splitByWidth(allocator, 12);
+            try s.addAnimation(
+                allocator,
+                "fly",
+                Sprite.FrameAnimation.init(1, 12, .loopForward, 1),
+            );
+            try self.shooter_master_pool.addSprite(s);
+        }
+
+        // Initialize ShooterEnemy projectile sprite pool
+        // Add surplus to handle launched projectiles
+        const shooter_projectile_path = "assets/enemy_shooter_projectile.png";
+        for (0..MaxShooterEnemies * 2 + 4) |_| { // 2 per shooter + 4 surplus
+            const s = try Sprite.initFromPng(
+                allocator,
+                shooter_projectile_path,
+                "shooter_projectile",
+            );
+            try s.splitByWidth(allocator, 8);
+            try s.addAnimation(
+                allocator,
+                "fly",
+                Sprite.FrameAnimation.init(1, 6, .loopForward, 1),
+            );
+            try self.shooter_projectile_pool.addSprite(s);
         }
     }
 
@@ -450,8 +503,145 @@ pub const EnemyManager = struct {
         }
     }
 
-    pub fn update(self: *EnemyManager) !void {
-        // Auto-spawn SingleEnemies
+    pub fn trySpawnShooterEnemy(
+        self: *EnemyManager,
+        x: i32,
+        y: i32,
+    ) !void {
+        // Debug logging
+        const log_file = std.fs.cwd().createFile("shooter_debug.log", .{ .truncate = false }) catch return;
+        defer log_file.close();
+        log_file.seekFromEnd(0) catch {};
+
+        var buf: [256]u8 = undefined;
+        const msg = std.fmt.bufPrint(&buf, "Frame {d}: Trying to spawn ShooterEnemy\n", .{self.update_count}) catch return;
+        log_file.writeAll(msg) catch {};
+
+        // Get master sprite
+        const master = self.shooter_master_pool.get() orelse {
+            const fail_msg = std.fmt.bufPrint(&buf, "Frame {d}: FAILED - No master sprite available!\n", .{self.update_count}) catch return;
+            log_file.writeAll(fail_msg) catch {};
+            return;
+        };
+
+        // Get two projectile sprites
+        const left_proj = self.shooter_projectile_pool.get() orelse {
+            self.shooter_master_pool.release(master);
+            const fail_msg = std.fmt.bufPrint(&buf, "Frame {d}: FAILED - No left projectile sprite available!\n", .{self.update_count}) catch return;
+            log_file.writeAll(fail_msg) catch {};
+            return;
+        };
+        const right_proj = self.shooter_projectile_pool.get() orelse {
+            self.shooter_master_pool.release(master);
+            self.shooter_projectile_pool.release(left_proj);
+            const fail_msg = std.fmt.bufPrint(&buf, "Frame {d}: FAILED - No right projectile sprite available!\n", .{self.update_count}) catch return;
+            log_file.writeAll(fail_msg) catch {};
+            return;
+        };
+
+        // Random global wave parameters
+        const global_duration = self.rng.random().intRangeAtMost(usize, 150, 180);
+        const global_amplitude = self.rng.random().intRangeAtMost(i32, 20, 40);
+
+        // Random speed
+        const min_speed: usize = 30;
+        const max_speed: usize = 50;
+
+        try master.startAnimation("fly");
+        try left_proj.startAnimation("fly");
+        try right_proj.startAnimation("fly");
+
+        master.setXY(x, y);
+        left_proj.setXY(x - 10, y);
+        right_proj.setXY(x + 14, y);
+
+        // Find an inactive shooter slot
+        // Cleanup happens before spawning, so any inactive slot is safe to reuse
+        for (&self.active_shooter_enemies) |*shooter| {
+            if (!shooter.active) {
+                const success_msg = std.fmt.bufPrint(&buf, "Frame {d}: SUCCESS - Spawned ShooterEnemy\n", .{self.update_count}) catch return;
+                log_file.writeAll(success_msg) catch {};
+
+                shooter.* = ShooterEnemy{
+                    .master_sprite = master,
+                    .left_projectile = left_proj,
+                    .right_projectile = right_proj,
+                    .projectile_pool = &self.shooter_projectile_pool,
+                    .screen = self.screen,
+                    .x = x,
+                    .y = y,
+                    .start_x = x,
+                    .active = true,
+                    .sprites_released = false,
+                    .state = .Entering,
+                    .global_wave = TrigWave.init(global_duration, global_amplitude),
+
+                    .speed_adder = self.rng.random().intRangeAtMost(
+                        usize,
+                        min_speed,
+                        max_speed,
+                    ),
+                    .speed_threshold = 100,
+                    .speed_value = 0,
+
+                    .damage = 0,
+                    .damage_threshold = 10,
+                    .score = 350,
+                };
+                return;
+            }
+        }
+
+        // If we couldn't find a slot, release the sprites
+        const no_slot_msg = std.fmt.bufPrint(&buf, "Frame {d}: FAILED - No inactive shooter slot available!\n", .{self.update_count}) catch return;
+        log_file.writeAll(no_slot_msg) catch {};
+
+        self.shooter_master_pool.release(master);
+        self.shooter_projectile_pool.release(left_proj);
+        self.shooter_projectile_pool.release(right_proj);
+    }
+
+    pub fn updateWithPlayerCenter(self: *EnemyManager, player_center: PlayerCenter) !void {
+        // FIRST: Update and cleanup all enemies to release sprites
+        // This must happen before spawning to ensure sprite pools are up-to-date
+
+        // Update and cleanup SingleEnemies
+        for (&self.active_single_enemies) |*enemy| {
+            if (enemy.active) {
+                enemy.update();
+                if (!enemy.active) {
+                    self.single_enemy_pool.release(enemy.sprite);
+                }
+            }
+        }
+
+        // Update and cleanup SwarmEnemies
+        for (&self.active_swarm_enemies) |*swarm| {
+            if (swarm.active) {
+                swarm.update();
+                if (!swarm.active) {
+                    // Release all sprites
+                    for (0..swarm.tail_count) |i| {
+                        swarm.tail_pool.release(swarm.tail_sprites[i]);
+                    }
+                    swarm.tail_pool.release(swarm.master_sprite);
+                }
+            }
+        }
+
+        // Update and cleanup ShooterEnemies
+        for (&self.active_shooter_enemies) |*shooter| {
+            if (shooter.active) {
+                shooter.update(player_center, &self.rng);
+            }
+
+            // Clean up sprites for any inactive shooter that hasn't been cleaned up yet
+            if (!shooter.active and !shooter.sprites_released) {
+                shooter.release(&self.shooter_master_pool, &self.shooter_projectile_pool);
+            }
+        }
+
+        // SECOND: Auto-spawn SingleEnemies
         var single_count: usize = 0;
         for (self.active_single_enemies) |enemy| {
             if (enemy.active) single_count += 1;
@@ -511,30 +701,44 @@ pub const EnemyManager = struct {
             }
         }
 
-        // Update all active enemies
-        for (&self.active_single_enemies) |*enemy| {
-            if (enemy.active) {
-                enemy.update();
-                if (!enemy.active) {
-                    self.single_enemy_pool.release(enemy.sprite);
-                }
+        // Auto-spawn ShooterEnemies (only after unlock frame)
+        if (self.update_count >= self.shooter_unlock_frame) {
+            var shooter_count: usize = 0;
+            for (self.active_shooter_enemies) |shooter| {
+                if (shooter.active) shooter_count += 1;
             }
-        }
 
-        for (&self.active_swarm_enemies) |*swarm| {
-            if (swarm.active) {
-                swarm.update();
-                if (!swarm.active) {
-                    // Release all sprites
-                    for (0..swarm.tail_count) |i| {
-                        swarm.tail_pool.release(swarm.tail_sprites[i]);
+            if (shooter_count < self.max_shooter_concurrent) {
+                if (self.shooter_spawn_cooldown == 0) {
+                    // Spawn 1 or 2 enemies (50% chance each)
+                    const count = if (self.rng.random().boolean()) @as(usize, 1) else @as(usize, 2);
+
+                    for (0..count) |_| {
+                        const rand_x: i32 = self.rng.random().intRangeAtMost(
+                            i32,
+                            32,
+                            @as(i32, @intCast(self.screen.w)) - 32,
+                        );
+
+                        try self.trySpawnShooterEnemy(rand_x, -16);
                     }
-                    swarm.tail_pool.release(swarm.master_sprite);
+
+                    // Add random jitter to interval
+                    const jitter = self.rng.random().intRangeAtMost(usize, 0, 200);
+                    self.shooter_spawn_cooldown = self.shooter_spawn_interval + jitter;
+                } else {
+                    self.shooter_spawn_cooldown -= 1;
                 }
             }
         }
 
         self.update_count += 1;
+    }
+
+    // Legacy update function for backwards compatibility
+    pub fn update(self: *EnemyManager) !void {
+        const dummy_player_center = PlayerCenter{ .x = @as(i32, @intCast(self.screen.w / 2)), .y = @as(i32, @intCast(self.screen.h / 2)) };
+        try self.updateWithPlayerCenter(dummy_player_center);
     }
 
     pub fn addRenderSurfaces(self: *EnemyManager) !void {
@@ -565,6 +769,37 @@ pub const EnemyManager = struct {
                 );
             }
         }
+
+        // Render ShooterEnemies (launched projectiles first, then master, then attached projectiles)
+        for (&self.active_shooter_enemies) |*shooter| {
+            if (shooter.active) {
+                // Render launched projectiles first (background)
+                for (&shooter.launched_projectiles) |*proj| {
+                    if (proj.active) {
+                        try self.screen.addRenderSurface(
+                            try proj.sprite.getCurrentFrameSurface(),
+                        );
+                    }
+                }
+
+                // Render master
+                try self.screen.addRenderSurface(
+                    try shooter.master_sprite.getCurrentFrameSurface(),
+                );
+
+                // Render attached projectiles (foreground)
+                if (shooter.left_projectile) |left| {
+                    try self.screen.addRenderSurface(
+                        try left.getCurrentFrameSurface(),
+                    );
+                }
+                if (shooter.right_projectile) |right| {
+                    try self.screen.addRenderSurface(
+                        try right.getCurrentFrameSurface(),
+                    );
+                }
+            }
+        }
     }
 
     pub fn deinit(self: *EnemyManager, allocator: std.mem.Allocator) void {
@@ -572,6 +807,8 @@ pub const EnemyManager = struct {
         for (&self.active_swarm_enemies) |*swarm| {
             swarm.tail_pool.deinit(allocator);
         }
+        self.shooter_master_pool.deinit(allocator);
+        self.shooter_projectile_pool.deinit(allocator);
         allocator.destroy(self);
     }
 };
