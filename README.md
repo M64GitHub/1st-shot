@@ -17,29 +17,29 @@
 
 This isn't your typical ASCII roguelike. **1st-shot** pushes terminal gaming into uncharted territory with technology that rivals modern GUI games:
 
-### 🎵 **Authentic SID Chip Music**
+### **Authentic SID Chip Music**
 The **world's first terminal game** with real Commodore 64 SID chip emulation, running in a dedicated background thread. Experience the iconic sounds of the C64 era while you dodge bullets.
 
-### 🔊 **Real-Time Audio Mixing**
+### **Real-Time Audio Mixing**
 Dynamic WAV sound effects seamlessly mixed into the SID music stream. Explosions, weapons, power-ups — all with zero audio interruption or glitches.
 
-### ✨ **Subpixel-Smooth Animation**
+### **Subpixel-Smooth Motion**
 Forget choppy ASCII movement. A custom subpixel accumulator system allows sprites to move at fractional pixel speeds, creating smooth motion at any velocity. Each sprite glides pixel-by-pixel with precise sub-frame positioning.
 
-### 🎯 **Three Enemy Types with Distinct Behaviors**
+### **Three Enemy Types with Distinct Behaviors**
 Different enemy patterns with formation flying, state machines, and targeting:
 - **SingleEnemy**: Straight or zigzag patterns with global wave sync
 - **SwarmEnemy**: Snake-like formations that grow over time (up to 17 sprites!)
-- **ShooterEnemy**: State machine behavior with projectile tracking and orphaned bullet mechanics
+- **ShooterEnemy**: State machine behavior with projectile tracking and orphaned bullet mechanics - beware, it aims at You!
 
-### 🎨 **True Sprite Graphics**
-PNG sprite sheets with frame-based animation, not ASCII art. Object pooling prevents allocation overhead. Dual-buffered rendering eliminates flicker.
+### **True Sprite Graphics**
+PNG sprite sheets with frame-based animation, not ASCII art. Object pooling prevents allocation overhead. Buffered rendering eliminates flicker.
 
-### 🚀 **Multi-Threaded Architecture**
+### **Multi-Threaded Architecture**
 Audio runs in its own thread, updating every 35ms independently of the game loop. No audio stutter, no frame drops.
 
-### 💥 **Complete Game Engine**
-- **8 explosion types**
+### **Complete Game Engine**
+- **3 explosion types**
 - **200-star parallax starfield** with depth-based speed
 - **Multiple weapon systems** (spread shot, default)
 - **Shield mechanics** with visual overlays
@@ -48,12 +48,12 @@ Audio runs in its own thread, updating every 35ms independently of the game loop
 
 ---
 
-## 🕹️ Screen-SHOTS
+## Screen-SHOTS
 
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Requirements
 - **Zig 0.14.0+**
@@ -87,7 +87,7 @@ zig build run-1st-shot
 
 ---
 
-## 🎯 How to Play
+## How to Play
 
 ### Survive the onslaught!
 
@@ -95,20 +95,20 @@ zig build run-1st-shot
 
 ### Enemy Types
 
-#### 🟢 **SingleEnemy** (250 pts)
+#### **SingleEnemy** (250 pts)
 - Simple but deadly
 - Two movement patterns: Straight or Zigzag
 - Unlocked from start
 - Health: 5 hits
 
-#### 🔵 **SwarmEnemy** (500 pts)
+#### **SwarmEnemy** (500 pts)
 - Snake-like formations
 - Grows longer the longer you survive (up to 17 segments!)
 - Graduated amplitude creates mesmerizing wave patterns
 - Unlocks at **1000 frames (~16 seconds)**
 - Health: 15 hits (hit the head!)
 
-#### 🔴 **ShooterEnemy** (350 pts)
+#### **ShooterEnemy** (350 pts)
 - Advanced AI with state machine
 - Fires two tracking projectiles at your position
 - **Danger**: When destroyed, attached bullets become orphans and fall!
@@ -117,10 +117,10 @@ zig build run-1st-shot
 
 ### Power-Ups
 
-- 💎 **Ammo**: Refills spread weapon
-- 🛡️ **Shield**: Temporary invincibility
-- ❤️ **Extra Life**: Gain 1 life
-- 🎯 **Score Bonus**: Instant points
+- **Ammo**: Refills spread weapon
+- **Shield**: Temporary invincibility
+- **Extra Life**: Gain 1 life
+- **Score Bonus**: Instant points
 
 ### Dropstacles
 
@@ -129,6 +129,8 @@ Shoot these to collect rewards (but don't touch them!):
 - **LifeDrop** (20%)
 - **AmmoDrop** (40%)
 - **Jackpot** (5%): Shield + Life + 100 Ammo!
+
+They all look the same, the actual reward will be a surprise.
 
 ### Score Milestones
 
@@ -139,7 +141,7 @@ Reach these scores to auto-unlock bonuses:
 
 ---
 
-## 🔬 Technical Deep Dive
+## Technical Deep Dive
 
 ### How It Works
 
@@ -149,29 +151,11 @@ Reach these scores to auto-unlock bonuses:
 
 Traditional terminal games move objects 1 cell at a time. We use a **fractional accumulator**:
 
-```zig
-self.speed_value += self.speed_adder;
-while (self.speed_value >= self.speed_threshold) {
-    self.speed_value -= self.speed_threshold;
-    self.y += 1;  // Move one pixel
-}
-```
-
 This allows speeds like **0.33 pixels/frame**, creating smooth motion impossible with frame-based movement.
 
 #### **SID Chip Emulation Integration**
 
 Using the **zigreSID** library, we emulate the legendary MOS Technology 6581/8580 SID chip:
-
-```zig
-// Background thread continuously fills audio buffer
-fn playerThreadFunc() void {
-    while (running) {
-        player.update();  // Generate SID samples
-        std.time.sleep(35_000_000);  // 35ms
-    }
-}
-```
 
 The `MixingDumpPlayer` wraps SID emulation + WAV mixing:
 - Reads SID register dumps (`.dmp` format)
@@ -181,12 +165,6 @@ The `MixingDumpPlayer` wraps SID emulation + WAV mixing:
 #### **Sprite Pooling**
 
 Pre-allocate sprite pools at startup, never allocate during gameplay:
-
-```zig
-// Example: ShooterEnemy pools
-shooter_master_pool: 6 sprites (4 active + 2 surplus)
-shooter_projectile_pool: 12 sprites (8 active + 4 surplus)
-```
 
 Benefits:
 - Zero allocation overhead during gameplay
@@ -244,7 +222,7 @@ Clean separation of concerns, easy to extend.
 
 ---
 
-## 🏗️ Development
+## Development
 
 ### Architecture Highlights
 
@@ -293,9 +271,9 @@ while (true) {
 
 ---
 
-## 🔧 Dependencies
+## Dependencies
 
-### Zig Libraries (by M64)
+### Zig Libraries
 
 - **movy** - Terminal graphics library
   - Double-buffered screen rendering
@@ -310,8 +288,6 @@ while (true) {
   - MixingDumpPlayer for WAV mixing
   - SDL2 audio output
 
-*Currently referenced locally during development. Will be published as Zig packages.*
-
 ### System Dependencies
 
 - **SDL2** - Audio output and WAV loading
@@ -319,9 +295,9 @@ while (true) {
 
 ---
 
-## 🎼 Why Zig?
+## Why Zig?
 
-This project showcases Zig's strengths:
+This project leverages Zig's strengths:
 
 - **C Interop**: Seamless SDL2 and C library integration
 - **Manual Memory Control**: Zero GC, predictable performance
@@ -332,7 +308,7 @@ This project showcases Zig's strengths:
 
 ---
 
-## 🌟 Features
+## Features
 
 ### What 1st-shot brings to terminal gaming:
 
@@ -345,26 +321,17 @@ This project showcases Zig's strengths:
 
 ---
 
-## 📜 License
+## License
 
-[Your License Here]
-
----
-
-## 🙏 Credits
-
-- **zigreSID** - SID chip emulation library
-- **SDL2** - Simple DirectMedia Layer for audio
-- **movy** - Custom terminal graphics library
-- **SID music**: "CN II" by [Original Artist]
+MIT. Hack it, spread it!
 
 ---
 
-## 🚀 Join the Revolution
+## Join the Terminal Revolution
 
 **1st-shot** proves that terminal gaming can be a serious platform for sophisticated game development. The limitations aren't in the medium — they're in our imagination.
 
-*What will you build?*
+*What's your shot'?*
 
 ---
 
