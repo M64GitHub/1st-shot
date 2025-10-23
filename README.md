@@ -15,8 +15,6 @@
 
 ---
 
-## 🎮 What Makes This Next-Gen?
-
 This isn't your typical ASCII roguelike. **1st-shot** pushes terminal gaming into uncharted territory with technology that rivals modern GUI games:
 
 ### 🎵 **Authentic SID Chip Music**
