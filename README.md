@@ -86,9 +86,9 @@ zig build run-1st-shot
 
 | Key | Action |
 |-----|--------|
-| **Arrow Keys** | Move ship |
+| **Arrow Keys** | Move ship left / right |
 | **Space** | Fire weapon |
-| **P** | Pause / Unpause |
+| **P** / **Up**| Pause / Unpause |
 | **ESC** | Quit |
 
 ---
