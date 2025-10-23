@@ -28,4 +28,7 @@ pub const StatusWindow = struct {
     pub fn update(self: *StatusWindow, text: []const u8) void {
         _ = self.surface.putStrXY(text, 1, 1, self.fg_color, self.bg_color);
     }
+    pub fn update_bottom(self: *StatusWindow, text: []const u8) void {
+        _ = self.surface.putStrXY(text, 1, 3, self.fg_color, self.bg_color);
+    }
 };

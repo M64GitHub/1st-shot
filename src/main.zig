@@ -55,6 +55,7 @@ pub fn main() !void {
     var keydown_cooldown: usize = 0;
     var last_key: ?movy.input.Key = null;
     var freeze: i32 = 0;
+    var status: []u8 = "";
 
     while (true) {
         inner_loop += 1;
@@ -106,6 +107,16 @@ pub fn main() !void {
             var end_time = std.time.nanoTimestamp();
             const render_time_ns = end_time - start_time;
 
+            const scrn_h = @divTrunc(screen.h, 2);
+
+            _ = screen.output_surface.putStrXY(
+                status,
+                0,
+                scrn_h - 1,
+                movy.color.LIGHT_BLUE,
+                movy.color.BLACK,
+            );
+
             // Blast to terminal
             try screen.output();
             end_time = std.time.nanoTimestamp() - end_time;
@@ -138,23 +149,15 @@ pub fn main() !void {
             );
             loop_time_len = loop_time.len;
 
-            // print status
-
-            const msg =
-                game.player.message orelse "";
-
-            const status = try std.fmt.bufPrint(
+            status = try std.fmt.bufPrint(
                 &status_line_buffer,
-                "{s:>20} {s:>28} | {s:>20} | {s:>20}",
+                "{s:>28} | {s:>20} | {s:>20}",
                 .{
-                    msg,
                     render_time_buffer[0..render_time_len],
                     output_time_buffer[0..output_time_len],
                     loop_time_buffer[0..loop_time_len],
                 },
             );
-            const status_len = status.len;
-            game.statuswin.update(status_line_buffer[0..status_len]);
         } else std.time.sleep(50_000);
     }
 }

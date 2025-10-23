@@ -26,13 +26,13 @@ The **world's first terminal game** with real Commodore 64 SID chip emulation, r
 Dynamic WAV sound effects seamlessly mixed into the SID music stream. Explosions, weapons, power-ups — all with zero audio interruption or glitches.
 
 ### ✨ **Subpixel-Smooth Animation**
-Forget choppy ASCII movement. Our custom subpixel accumulator system delivers **buttery-smooth 60fps motion** at just 10 FPS rendering. Each sprite glides pixel-by-pixel with fractional precision.
+Forget choppy ASCII movement. A custom subpixel accumulator system allows sprites to move at fractional pixel speeds, creating smooth motion at any velocity. Each sprite glides pixel-by-pixel with precise sub-frame positioning.
 
-### 🎯 **Sophisticated Enemy AI**
-Three distinct enemy types with formation flying, state machines, and targeting systems:
+### 🎯 **Three Enemy Types with Distinct Behaviors**
+Different enemy patterns with formation flying, state machines, and targeting:
 - **SingleEnemy**: Straight or zigzag patterns with global wave sync
 - **SwarmEnemy**: Snake-like formations that grow over time (up to 17 sprites!)
-- **ShooterEnemy**: Advanced AI with projectile tracking and orphaned bullet mechanics
+- **ShooterEnemy**: State machine behavior with projectile tracking and orphaned bullet mechanics
 
 ### 🎨 **True Sprite Graphics**
 PNG sprite sheets with frame-based animation, not ASCII art. Object pooling prevents allocation overhead. Dual-buffered rendering eliminates flicker.
@@ -85,8 +85,8 @@ Audio runs in its own thread, updating every 35ms independently of the game loop
 ### Install
 
 ```bash
-# Clone with submodules (movy and zigreSID libraries)
-git clone --recursive https://github.com/yourusername/1st-shot.git
+# Clone repository
+git clone https://github.com/yourusername/1st-shot.git
 cd 1st-shot
 
 # Build (optimized for ReleaseFast)
@@ -94,10 +94,9 @@ zig build
 
 # Run the game
 zig build run-1st-shot
-
-# Try the subpixel movement tech demo
-zig build run-demo-subpixel
 ```
+
+*Note: Dependencies (movy and zigreSID) are automatically fetched during build via Zig's package manager.*
 
 ### Controls
 
@@ -105,8 +104,6 @@ zig build run-demo-subpixel
 |-----|--------|
 | **Arrow Keys** | Move ship |
 | **Space** | Fire weapon |
-| **W** | Switch weapon (default ↔ spread shot) |
-| **S** | Activate shield |
 | **P** | Pause / Unpause |
 | **ESC** | Quit |
 
@@ -166,9 +163,9 @@ Reach these scores to auto-unlock bonuses:
 
 ## 🔬 Technical Deep Dive
 
-### Why This Is Groundbreaking
+### How It Works
 
-**1st-shot** achieves what was previously thought impossible in terminal gaming:
+**1st-shot** combines several techniques to create a smooth terminal gaming experience:
 
 #### **Subpixel Movement Algorithm**
 
@@ -183,8 +180,6 @@ while (self.speed_value >= self.speed_threshold) {
 ```
 
 This allows speeds like **0.33 pixels/frame**, creating smooth motion impossible with frame-based movement.
-
-**Try the demo**: `zig build run-demo-subpixel` to see jerky vs smooth side-by-side!
 
 #### **SID Chip Emulation Integration**
 
@@ -223,15 +218,15 @@ Benefits:
 
 #### **Multi-Threaded Audio**
 
-Game loop: **~10 FPS** (100 inner loops × 50μs sleep)
-Audio thread: **~28 FPS** (35ms update)
+Game loop: **~180 FPS** (~5600μs per frame including rendering and output)
+Audio thread: **~28 FPS** (35ms update interval)
 
-Completely independent, preventing audio glitches when rendering is heavy.
+Runs independently, preventing audio glitches during heavy rendering.
 
 #### **Manager Pattern Architecture**
 
 Each game system is a dedicated manager:
-- `EnemyManager` - All enemy AI and spawning
+- `EnemyManager` - Enemy behaviors and spawning
 - `ObstacleManager` - Asteroid field
 - `WeaponManager` - Player weapons
 - `SoundManager` - Audio (optional, graceful degradation)
@@ -249,18 +244,17 @@ Clean separation of concerns, easy to extend.
 ├── src/
 │   ├── main.zig              # Entry point, game loop
 │   ├── GameManager.zig       # Central orchestrator
-│   ├── EnemyManager.zig      # Enemy AI & spawning
+│   ├── EnemyManager.zig      # Enemy behaviors & spawning
 │   ├── SoundManager.zig      # Audio system
 │   ├── SingleEnemy.zig       # Simple enemy type
 │   ├── SwarmEnemy.zig        # Formation enemy type
-│   ├── ShooterEnemy.zig      # Advanced enemy with projectiles
+│   ├── ShooterEnemy.zig      # Enemy with projectiles
 │   ├── ObstacleManager.zig   # Asteroids
 │   ├── PlayerShip.zig        # Player entity
 │   ├── WeaponManager.zig     # Weapon systems
 │   ├── ShieldManager.zig     # Shield mechanics
 │   ├── ExplosionManager.zig  # Particle effects
 │   ├── Starfield.zig         # Background starfield
-│   ├── demo_subpixel.zig     # Subpixel movement demo
 │   └── ... (12 more managers)
 ├── assets/
 │   ├── *.png                 # Sprite sheets
@@ -270,36 +264,6 @@ Clean separation of concerns, easy to extend.
 ├── build.zig                 # Build configuration
 └── CLAUDE.md                 # Developer reference
 ```
-
----
-
-## 🎓 Demo Utilities
-
-### Subpixel Movement Demo
-
-An **interactive tech demonstration** comparing frame-based vs subpixel movement:
-
-```bash
-zig build run-demo-subpixel
-```
-
-**Features:**
-- Side-by-side comparison of two obstacles
-- **Left (ROUGH)**: Frame-based movement (moves in discrete steps)
-- **Right (SMOOTH)**: Subpixel movement (glides smoothly)
-- Real-time speed control for both
-- Toggle visibility to focus on one
-- Shows calculated **F value** (frames per pixel)
-
-**Controls:**
-- `UP/DOWN`: Adjust rough obstacle speed
-- `LEFT/RIGHT`: Adjust smooth obstacle speed
-- `1`: Toggle rough obstacle
-- `2`: Toggle smooth obstacle
-- `Y`: Sync positions
-- `ESC`: Quit
-
-Perfect for understanding why this game feels so smooth!
 
 ---
 
@@ -354,20 +318,22 @@ while (true) {
 
 ## 🔧 Dependencies
 
-### Local Libraries (git submodules)
+### Zig Libraries (by M64)
 
-- **[movy](../movy)** - Custom terminal graphics library
+- **movy** - Terminal graphics library
   - Double-buffered screen rendering
   - PNG sprite loading and animation
   - Input handling (keyboard, mouse)
   - Color support (24-bit RGB)
   - Sprite pooling system
 
-- **[zigreSID](../zigreSID)** - SID chip emulator
+- **zigreSID** - SID chip emulator
   - MOS 6581/8580 emulation
   - DumpPlayer for .dmp files
   - MixingDumpPlayer for WAV mixing
   - SDL2 audio output
+
+*Currently referenced locally during development. Will be published as Zig packages.*
 
 ### System Dependencies
 
@@ -389,23 +355,16 @@ This project showcases Zig's strengths:
 
 ---
 
-## 🌟 This Changes Terminal Gaming
+## 🌟 Features
 
-### Before 1st-shot:
-- ASCII art graphics
-- Choppy cell-based movement
-- No music (or simple beeps)
-- Limited gameplay depth
+### What 1st-shot brings to terminal gaming:
 
-### After 1st-shot:
-- ✅ High-res PNG sprites (24-bit color)
-- ✅ Subpixel-smooth animation
-- ✅ Authentic C64 SID music + dynamic sound effects
-- ✅ Complex enemy AI with state machines
-- ✅ Full game engine features (particles, shields, weapons, power-ups)
-- ✅ Multi-threaded architecture
-
-**This is to terminal gaming what Doom was to shareware FPS** — a technical showcase that redefines the genre.
+- High-res PNG sprites with 24-bit color
+- Subpixel movement system for smooth animation
+- Authentic C64 SID chip music with dynamic sound effects
+- Three enemy types with different behavior patterns
+- Full particle effects, shields, weapons, and power-ups
+- Multi-threaded architecture for audio independence
 
 ---
 
