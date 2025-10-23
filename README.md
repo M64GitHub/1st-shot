@@ -52,12 +52,6 @@ Audio runs in its own thread, updating every 35ms independently of the game loop
 ## Screen-SHOTS
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 17 49" src="https://github.com/user-attachments/assets/f3eb18c0-473c-4185-afe1-b2c9ae6a81ea" />
 
-
-<img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 26 36" src="https://github.com/user-attachments/assets/a12964e7-1229-41c6-a28a-dbba19d9018c" />
-
-
-<img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 27 13" src="https://github.com/user-attachments/assets/f47ff800-55ee-4ce3-ad5a-f33c49f1465e" />
-
 ---
 
 ## Quick Start
