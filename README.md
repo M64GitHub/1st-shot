@@ -331,7 +331,7 @@ MIT. Hack it, spread it!
 
 **1st-shot** proves that terminal gaming can be a serious platform for sophisticated game development. The limitations aren't in the medium — they're in our imagination.
 
-*What's your shot'?*
+*What's your shot?*
 
 ---
 
