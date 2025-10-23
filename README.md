@@ -50,6 +50,9 @@ Audio runs in its own thread, updating every 35ms independently of the game loop
 ---
 
 ## Screen-SHOTS
+<img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 26 36" src="https://github.com/user-attachments/assets/17550389-9988-4033-9a63-f78259d974d0" />
+
+
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 17 49" src="https://github.com/user-attachments/assets/f3eb18c0-473c-4185-afe1-b2c9ae6a81ea" />
 
 ---
