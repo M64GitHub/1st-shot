@@ -166,6 +166,20 @@ pub const GameManager = struct {
                 self.gamestate.transitionTo(.FadingFromPause);
             }
         }
+
+        // pause key UP
+        if (key.type == .Up) {
+            if (self.gamestate.state != .Paused and
+                self.gamestate.state != .FadingToPause and
+                self.gamestate.state != .FadingFromPause)
+            {
+                self.gamestate.transitionTo(.FadingToPause);
+            }
+
+            if (self.gamestate.state == .Paused) {
+                self.gamestate.transitionTo(.FadingFromPause);
+            }
+        }
     }
 
     pub fn onKeyUp(self: *GameManager, key: movy.input.Key) void {
