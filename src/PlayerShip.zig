@@ -179,19 +179,18 @@ pub const PlayerShip = struct {
         allocator.destroy(self.weapon_manager);
     }
 
+    pub fn tryFire(self: *PlayerShip) void {
+        const fx = self.ship.x +
+            @divTrunc(
+                @as(i32, @intCast(self.ship.sprite_ship.w)),
+                2,
+            ) - 4;
+        const fy = self.ship.y + 8;
+        self.weapon_manager.tryFire(fx, fy);
+    }
+
     pub fn onKeyDown(self: *PlayerShip, key: movy.input.Key) void {
         self.controller.onKeyDown(key);
-        if (key.type == .Char) {
-            if (key.sequence[0] == ' ') {
-                const fx = self.ship.x +
-                    @divTrunc(
-                        @as(i32, @intCast(self.ship.sprite_ship.w)),
-                        2,
-                    ) - 4;
-                const fy = self.ship.y + 8;
-                self.weapon_manager.tryFire(fx, fy);
-            }
-        }
     }
 
     pub fn onKeyUp(self: *PlayerShip, key: movy.input.Key) void {

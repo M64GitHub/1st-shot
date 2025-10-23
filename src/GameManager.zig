@@ -17,6 +17,8 @@ const DropStacleManager = @import("DropStacleManager.zig").DropStacleManager;
 const DropStacleType = @import("DropStacleManager.zig").DropStacleType;
 const EnemyManager = @import("EnemyManager.zig").EnemyManager;
 const PlayerCenter = @import("EnemyManager.zig").PlayerCenter;
+const SoundManager = @import("SoundManager.zig").SoundManager;
+const SoundEffectType = @import("SoundManager.zig").SoundEffectType;
 
 const Lives = 3;
 const Points_For_Ammo: usize = 3000;
@@ -38,6 +40,7 @@ pub const GameManager = struct {
     starfield: *Starfield,
     props: *PropsManager,
     dropstacles: *DropStacleManager,
+    sound: ?*SoundManager,
     screen: *movy.Screen,
     frame_counter: usize = 0,
 
@@ -48,16 +51,13 @@ pub const GameManager = struct {
         allocator: std.mem.Allocator,
         screen: *movy.Screen,
     ) !GameManager {
+        // Try to initialize sound manager (optional - game continues if it fails)
+        const sound_manager = SoundManager.init(allocator);
+
         return GameManager{
             .player = try PlayerShip.init(allocator, screen, Lives),
             .gamestate = GameStateManager.init(),
-            .statuswin = try StatusWindow.init(
-                allocator,
-                16,
-                8,
-                movy.color.DARK_BLUE,
-                movy.color.GRAY,
-            ),
+            .statuswin = try StatusWindow.init(allocator, 16, 8, movy.color.DARK_BLUE, movy.color.GRAY),
             .starfield = try Starfield.init(allocator, screen),
             .props = try PropsManager.init(allocator, screen),
             .visuals = try GameVisuals.init(allocator, screen),
@@ -67,6 +67,7 @@ pub const GameManager = struct {
             .enemies = try EnemyManager.init(allocator, screen),
             .dropstacles = try DropStacleManager.init(allocator, screen),
             .shields = try ShieldManager.init(allocator, screen),
+            .sound = sound_manager,
             .screen = screen,
         };
     }
@@ -79,6 +80,12 @@ pub const GameManager = struct {
         self.starfield.deinit(allocator);
         self.props.deinit(allocator);
         self.dropstacles.deinit(allocator);
+
+        // Clean up sound manager if it was initialized
+        if (self.sound) |sound| {
+            sound.deinit();
+            allocator.destroy(sound);
+        }
     }
 
     pub fn onKeyDown(self: *GameManager, key: movy.input.Key) void {
@@ -101,6 +108,14 @@ pub const GameManager = struct {
         if (!self.player.ship.visible) return;
 
         self.player.onKeyDown(key);
+
+        if (key.type == .Char and key.sequence[0] == ' ') {
+            self.player.tryFire();
+            if (self.player.weapon_manager.just_fired) {
+                if (self.sound) |sound|
+                    sound.triggerSound(.Weapon1Fired);
+            }
+        }
         // switch weapon key
         if (key.type == .Char and key.sequence[0] == 'w') {
             self.switchWeapon();
@@ -109,6 +124,8 @@ pub const GameManager = struct {
         // shield key
         if (key.type == .Char and key.sequence[0] == 's') {
             self.shields.activate(.Default);
+            if (self.sound) |sound|
+                sound.triggerSound(.ShieldActivated);
         }
 
         // pops test key
@@ -177,6 +194,9 @@ pub const GameManager = struct {
                     if (self.gamestate.state == .StartingInvincible) {
                         self.shields.activate(.Default);
                         self.shields.default_shield.cooldown_ctr = 250;
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ShieldActivated);
                     }
                     if (self.gamestate.state == .AlmostVulnerable) {}
                 }
@@ -476,6 +496,15 @@ pub const GameManager = struct {
                             exp_type,
                         ) catch {};
 
+                        if (self.sound) |sound| {
+                            const et: SoundEffectType = switch (obstacle.kind) {
+                                .AsteroidSmall => .ExplosionSmall,
+                                .AsteroidBig, .AsteroidBig2 => .ExplosionBig,
+                                .AsteroidHuge => .ExplosionHuge,
+                            };
+                            sound.triggerSound(et);
+                        }
+
                         self.player.score += obstacle.score;
 
                         _ = self.props.spawnPointsBonus(
@@ -515,6 +544,7 @@ pub const GameManager = struct {
             .Small,
             20,
         ) catch {};
+
         self.exploder.tryExplodeDelayed(
             pos_ship.x - 5 * sign,
             pos_ship.y + 5,
@@ -528,6 +558,7 @@ pub const GameManager = struct {
             .Huge,
             40,
         ) catch {};
+        if (self.sound) |sound| sound.triggerSound(.ExplosionHuge);
 
         self.gamestate.transitionTo(.Dying);
     }
@@ -558,6 +589,9 @@ pub const GameManager = struct {
                         .Small,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     if (obstacle.tryDestroy()) {
                         const pos_obs = obstacle.getCenterCoords();
 
@@ -573,6 +607,15 @@ pub const GameManager = struct {
                             pos_obs.y,
                             exp_type,
                         ) catch {};
+
+                        if (self.sound) |sound| {
+                            const et: SoundEffectType = switch (obstacle.kind) {
+                                .AsteroidSmall => .ExplosionHuge,
+                                .AsteroidBig, .AsteroidBig2 => .ExplosionHuge,
+                                .AsteroidHuge => .ExplosionHuge,
+                            };
+                            sound.triggerSound(et);
+                        }
 
                         self.player.score += obstacle.score;
 
@@ -616,6 +659,9 @@ pub const GameManager = struct {
                         .SmallPurple,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     if (obstacle.tryDestroy()) {
                         const pos_obs = obstacle.getCenterCoords();
 
@@ -631,6 +677,15 @@ pub const GameManager = struct {
                             pos_obs.y,
                             exp_type,
                         ) catch {};
+
+                        if (self.sound) |sound| {
+                            const et: SoundEffectType = switch (obstacle.kind) {
+                                .AsteroidSmall => .ExplosionHuge,
+                                .AsteroidBig, .AsteroidBig2 => .ExplosionHuge,
+                                .AsteroidHuge => .ExplosionHuge,
+                            };
+                            sound.triggerSound(et);
+                        }
 
                         self.player.score += obstacle.score;
 
@@ -693,6 +748,7 @@ pub const GameManager = struct {
                     pos_drop.y,
                     .BigBlu,
                 ) catch {};
+                if (self.sound) |sound| sound.triggerSound(.ExplosionBig);
                 drop.active = false;
             }
         }
@@ -708,24 +764,31 @@ pub const GameManager = struct {
 
                 const pos = prop.getCenterCoords();
                 self.exploder.tryExplode(pos.x, pos.y, .SmallPurple) catch {};
+                if (self.sound) |sound| sound.triggerSound(.Collectible);
             },
             .ExtraLife => {
                 self.player.lives += 1;
 
                 const pos = prop.getCenterCoords();
                 self.exploder.tryExplode(pos.x, pos.y, .SmallCyan) catch {};
+                if (self.sound) |sound| sound.triggerSound(.Collectible);
             },
             .ShieldBonus => {
                 self.shields.activate(.Default);
 
+                if (self.sound) |sound|
+                    sound.triggerSound(.ShieldActivated);
+
                 const pos = prop.getCenterCoords();
                 self.exploder.tryExplode(pos.x, pos.y, .SmallCyan) catch {};
+                if (self.sound) |sound| sound.triggerSound(.Collectible);
             },
             .PointsBonus => {
                 self.player.score += prop.value;
 
                 const pos = prop.getCenterCoords();
                 self.exploder.tryExplode(pos.x, pos.y, .Small) catch {};
+                if (self.sound) |sound| sound.triggerSound(.Collectible);
 
                 // Check for milestone rewards
                 self.checkScoreMilestones();
@@ -901,6 +964,7 @@ pub const GameManager = struct {
 
                 // Extra big explosion for jackpot!
                 self.exploder.tryExplode(x, y, .Huge) catch {};
+                if (self.sound) |sound| sound.triggerSound(.ExplosionHuge);
             },
         }
     }
@@ -1064,6 +1128,7 @@ pub const GameManager = struct {
                             pos_enemy.y,
                             .Big,
                         ) catch {};
+                        if (self.sound) |sound| sound.triggerSound(.ExplosionBig);
 
                         self.player.score += enemy.score;
 
@@ -1503,6 +1568,7 @@ pub const GameManager = struct {
                             pos_shooter.y,
                             .Big,
                         ) catch {};
+                        if (self.sound) |sound| sound.triggerSound(.ExplosionBig);
 
                         self.player.score += shooter.score;
 
@@ -1591,6 +1657,7 @@ pub const GameManager = struct {
                             pos_shooter.y,
                             .Big,
                         ) catch {};
+                        if (self.sound) |sound| sound.triggerSound(.ExplosionBig);
 
                         self.player.score += shooter.score;
 
