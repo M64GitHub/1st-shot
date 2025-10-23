@@ -31,8 +31,6 @@ pub const GameVisual = struct {
 
 pub const GameVisuals = struct {
     screen: *movy.Screen,
-    boom: GameVisual,
-    zone: GameVisual,
     paused: GameVisual,
     game: GameVisual,
     over: GameVisual,
@@ -41,29 +39,6 @@ pub const GameVisuals = struct {
         allocator: std.mem.Allocator,
         screen: *movy.Screen,
     ) !GameVisuals {
-        const boom = try GameVisual.init(
-            allocator,
-            "assets/boom.png",
-            "game",
-            50,
-            1,
-            50,
-        );
-        var pos = screen.getCenterCoords(boom.sprite.w, boom.sprite.h);
-        pos.y -= 30;
-        boom.sprite.setXY(pos.x, pos.y);
-
-        const zone = try GameVisual.init(
-            allocator,
-            "assets/zone.png",
-            "game",
-            50,
-            1,
-            50,
-        );
-        pos = screen.getCenterCoords(zone.sprite.w, zone.sprite.h);
-        zone.sprite.setXY(pos.x, pos.y);
-
         const paused = try GameVisual.init(
             allocator,
             "assets/paused.png",
@@ -72,7 +47,7 @@ pub const GameVisuals = struct {
             1,
             20,
         );
-        pos = screen.getCenterCoords(paused.sprite.w, paused.sprite.h);
+        var pos = screen.getCenterCoords(paused.sprite.w, paused.sprite.h);
         paused.sprite.setXY(pos.x, pos.y);
 
         const game = try GameVisual.init(
@@ -101,8 +76,6 @@ pub const GameVisuals = struct {
 
         return GameVisuals{
             .screen = screen,
-            .boom = boom,
-            .zone = zone,
             .game = game,
             .over = over,
             .paused = paused,
@@ -110,8 +83,6 @@ pub const GameVisuals = struct {
     }
 
     pub fn deinit(self: *GameVisuals, allocator: std.mem.Allocator) void {
-        self.boom.sprite.deinit(allocator);
-        self.zone.sprite.deinit(allocator);
         self.game.sprite.deinit(allocator);
         self.over.sprite.deinit(allocator);
         self.paused.sprite.deinit(allocator);

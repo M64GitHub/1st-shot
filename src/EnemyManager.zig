@@ -128,7 +128,11 @@ pub const SwarmEnemy = struct {
         const global_offset = self.global_wave.tickSine();
 
         // Update master position with zigzag (full amplitude) + global offset
-        const master_offset_x = movy.animation.trig.sine(current_tick, self.wave.duration, self.wave.amplitude);
+        const master_offset_x = movy.animation.trig.sine(
+            current_tick,
+            self.wave.duration,
+            self.wave.amplitude,
+        );
         self.x = self.start_x + master_offset_x + global_offset;
 
         self.master_sprite.stepActiveAnimation();
@@ -140,20 +144,30 @@ pub const SwarmEnemy = struct {
             tail_sprite.stepActiveAnimation();
 
             // Calculate position: offset behind master
-            const offset_y = self.y + @as(i32, @intCast((i + 1))) * self.tail_spacing;
+            const offset_y = self.y +
+                @as(i32, @intCast((i + 1))) * self.tail_spacing;
 
             // Phase offset for the wave - each tail is behind in the wave cycle
             // We calculate how far behind based on spacing
-            const phase_offset = @as(usize, @intCast(self.tail_spacing * @as(i32, @intCast(i + 1))));
+            const phase_offset = @as(usize, @intCast(
+                self.tail_spacing * @as(i32, @intCast(i + 1)),
+            ));
 
             // Calculate graduated amplitude: decreases from full at master to 1/4 at last tail
             // Formula: amplitude = base_amplitude * (1 - 3/4 * (i+1) / tail_count)
             // This gives us a linear progression from 100% to 25%
             const tail_index = i + 1; // 1 to tail_count
-            const amplitude_reduction = @divTrunc(self.wave.amplitude * 3 * @as(i32, @intCast(tail_index)), @as(i32, @intCast(self.tail_count)) * 4);
+            const amplitude_reduction = @divTrunc(
+                self.wave.amplitude * 3 * @as(i32, @intCast(tail_index)),
+                @as(i32, @intCast(self.tail_count)) * 4,
+            );
             const tail_amplitude = self.wave.amplitude - amplitude_reduction;
 
-            const offset_x = self.start_x + self.calculateSineWithAmplitude(current_tick, phase_offset, tail_amplitude) + global_offset;
+            const offset_x = self.start_x + self.calculateSineWithAmplitude(
+                current_tick,
+                phase_offset,
+                tail_amplitude,
+            ) + global_offset;
 
             tail_sprite.setXY(offset_x, offset_y);
         }
@@ -162,19 +176,31 @@ pub const SwarmEnemy = struct {
         self.wave.tick = (self.wave.tick + 1) % self.wave.duration;
 
         // Deactivate if master is off-screen (check bottom mainly)
-        if (self.y > @as(i32, @intCast(self.screen.h)) + (@as(i32, @intCast(self.tail_count)) * self.tail_spacing)) {
+        if (self.y > @as(i32, @intCast(self.screen.h)) +
+            (@as(i32, @intCast(self.tail_count)) * self.tail_spacing))
+        {
             self.active = false;
         }
     }
 
-    fn calculateSineWithAmplitude(self: *SwarmEnemy, current_tick: usize, phase_offset: usize, amplitude: i32) i32 {
+    fn calculateSineWithAmplitude(
+        self: *SwarmEnemy,
+        current_tick: usize,
+        phase_offset: usize,
+        amplitude: i32,
+    ) i32 {
         // Calculate the tick value for a sprite based on phase offset
         const offset_tick = if (current_tick >= phase_offset)
             current_tick - phase_offset
         else
-            self.wave.duration + current_tick - (phase_offset % self.wave.duration);
+            self.wave.duration + current_tick -
+                (phase_offset % self.wave.duration);
 
-        return movy.animation.trig.sine(offset_tick, self.wave.duration, amplitude);
+        return movy.animation.trig.sine(
+            offset_tick,
+            self.wave.duration,
+            amplitude,
+        );
     }
 
     pub fn getCenterCoords(self: *SwarmEnemy) struct { x: i32, y: i32 } {
@@ -267,14 +293,16 @@ pub const EnemyManager = struct {
             .swarm_enemy_pool = movy.graphic.SpritePool.init(allocator),
             .shooter_master_pool = movy.graphic.SpritePool.init(allocator),
             .shooter_projectile_pool = movy.graphic.SpritePool.init(allocator),
-            .active_single_enemies = [_]SingleEnemy{.{ .active = false }} ** MaxSingleEnemies,
+            .active_single_enemies = [_]SingleEnemy{.{ .active = false }} **
+                MaxSingleEnemies,
             .active_swarm_enemies = [_]SwarmEnemy{
                 .{
                     .active = false,
                     .tail_pool = movy.graphic.SpritePool.init(allocator),
                 },
             } ** MaxSwarmEnemies,
-            .active_shooter_enemies = [_]ShooterEnemy{.{ .active = false }} ** MaxShooterEnemies,
+            .active_shooter_enemies = [_]ShooterEnemy{.{ .active = false }} **
+                MaxShooterEnemies,
             .rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp())),
         };
 
@@ -452,13 +480,17 @@ pub const EnemyManager = struct {
                 }
 
                 // Random zigzag parameters
-                const duration = self.rng.random().intRangeAtMost(usize, 60, 120);
-                const amplitude = self.rng.random().intRangeAtMost(i32, 80, 100);
+                const duration =
+                    self.rng.random().intRangeAtMost(usize, 60, 120);
+                const amplitude =
+                    self.rng.random().intRangeAtMost(i32, 80, 100);
                 const spacing = self.rng.random().intRangeAtMost(i32, 4, 8);
 
                 // Random global wave parameters (applies to entire swarm)
-                const global_duration = self.rng.random().intRangeAtMost(usize, 150, 180);
-                const global_amplitude = self.rng.random().intRangeAtMost(i32, 20, 40);
+                const global_duration =
+                    self.rng.random().intRangeAtMost(usize, 150, 180);
+                const global_amplitude =
+                    self.rng.random().intRangeAtMost(i32, 20, 40);
 
                 // Random speed
                 const min_speed: usize = 25;
@@ -483,7 +515,10 @@ pub const EnemyManager = struct {
                     .tail_count = tail_size,
                     .tail_spacing = spacing,
                     .wave = TrigWave.init(duration, amplitude),
-                    .global_wave = TrigWave.init(global_duration, global_amplitude),
+                    .global_wave = TrigWave.init(
+                        global_duration,
+                        global_amplitude,
+                    ),
 
                     .speed_adder = self.rng.random().intRangeAtMost(
                         usize,
@@ -523,8 +558,10 @@ pub const EnemyManager = struct {
         };
 
         // Random global wave parameters
-        const global_duration = self.rng.random().intRangeAtMost(usize, 150, 180);
-        const global_amplitude = self.rng.random().intRangeAtMost(i32, 20, 40);
+        const global_duration =
+            self.rng.random().intRangeAtMost(usize, 150, 180);
+        const global_amplitude =
+            self.rng.random().intRangeAtMost(i32, 20, 40);
 
         // Random speed
         const min_speed: usize = 30;
@@ -566,7 +603,10 @@ pub const EnemyManager = struct {
                     .active = true,
                     .sprites_released = false,
                     .state = .Entering,
-                    .global_wave = TrigWave.init(global_duration, global_amplitude),
+                    .global_wave = TrigWave.init(
+                        global_duration,
+                        global_amplitude,
+                    ),
 
                     .speed_adder = self.rng.random().intRangeAtMost(
                         usize,
@@ -590,7 +630,10 @@ pub const EnemyManager = struct {
         self.shooter_projectile_pool.release(right_proj);
     }
 
-    pub fn updateWithPlayerCenter(self: *EnemyManager, player_center: PlayerCenter) !void {
+    pub fn updateWithPlayerCenter(
+        self: *EnemyManager,
+        player_center: PlayerCenter,
+    ) !void {
         // FIRST: Update and cleanup all enemies to release sprites
         // This must happen before spawning to ensure sprite pools are up-to-date
 
@@ -625,7 +668,10 @@ pub const EnemyManager = struct {
 
             // Clean up sprites for any inactive shooter that hasn't been cleaned up yet
             if (!shooter.active and !shooter.sprites_released) {
-                shooter.release(&self.shooter_master_pool, &self.shooter_projectile_pool);
+                shooter.release(
+                    &self.shooter_master_pool,
+                    &self.shooter_projectile_pool,
+                );
             }
         }
 
@@ -649,8 +695,10 @@ pub const EnemyManager = struct {
                     );
 
                     // 50/50 chance for Straight or Zigzag
-                    const movement_roll = self.rng.random().intRangeLessThan(u8, 0, 2);
-                    const movement_type: MovementType = if (movement_roll == 0) .Straight else .Zigzag;
+                    const movement_roll =
+                        self.rng.random().intRangeLessThan(u8, 0, 2);
+                    const movement_type: MovementType =
+                        if (movement_roll == 0) .Straight else .Zigzag;
 
                     try self.trySpawnSingleEnemy(rand_x, -16, movement_type);
                 }
@@ -681,8 +729,10 @@ pub const EnemyManager = struct {
                     try self.trySpawnSwarmEnemy(rand_x, -120);
 
                     // Add random jitter to interval
-                    const jitter = self.rng.random().intRangeAtMost(usize, 0, 100);
-                    self.swarm_spawn_cooldown = self.swarm_spawn_interval + jitter;
+                    const jitter =
+                        self.rng.random().intRangeAtMost(usize, 0, 100);
+                    self.swarm_spawn_cooldown =
+                        self.swarm_spawn_interval + jitter;
                 } else {
                     self.swarm_spawn_cooldown -= 1;
                 }
@@ -699,7 +749,11 @@ pub const EnemyManager = struct {
             if (shooter_count < self.max_shooter_concurrent) {
                 if (self.shooter_spawn_cooldown == 0) {
                     // Spawn 1 or 2 enemies (50% chance each)
-                    const count = if (self.rng.random().boolean()) @as(usize, 1) else @as(usize, 2);
+                    const count =
+                        if (self.rng.random().boolean()) @as(
+                            usize,
+                            1,
+                        ) else @as(usize, 2);
 
                     for (0..count) |_| {
                         const rand_x: i32 = self.rng.random().intRangeAtMost(
@@ -712,8 +766,10 @@ pub const EnemyManager = struct {
                     }
 
                     // Add random jitter to interval
-                    const jitter = self.rng.random().intRangeAtMost(usize, 0, 200);
-                    self.shooter_spawn_cooldown = self.shooter_spawn_interval + jitter;
+                    const jitter =
+                        self.rng.random().intRangeAtMost(usize, 0, 200);
+                    self.shooter_spawn_cooldown =
+                        self.shooter_spawn_interval + jitter;
                 } else {
                     self.shooter_spawn_cooldown -= 1;
                 }
@@ -725,7 +781,10 @@ pub const EnemyManager = struct {
 
     // Legacy update function for backwards compatibility
     pub fn update(self: *EnemyManager) !void {
-        const dummy_player_center = PlayerCenter{ .x = @as(i32, @intCast(self.screen.w / 2)), .y = @as(i32, @intCast(self.screen.h / 2)) };
+        const dummy_player_center = PlayerCenter{
+            .x = @as(i32, @intCast(self.screen.w / 2)),
+            .y = @as(i32, @intCast(self.screen.h / 2)),
+        };
         try self.updateWithPlayerCenter(dummy_player_center);
     }
 

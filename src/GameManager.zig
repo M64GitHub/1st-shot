@@ -19,6 +19,7 @@ const EnemyManager = @import("EnemyManager.zig").EnemyManager;
 const PlayerCenter = @import("EnemyManager.zig").PlayerCenter;
 const SoundManager = @import("SoundManager.zig").SoundManager;
 const SoundEffectType = @import("SoundManager.zig").SoundEffectType;
+const GameLogo = @import("GameLogo.zig").GameLogo;
 
 const Lives = 3;
 const Points_For_Ammo: usize = 3000;
@@ -41,6 +42,7 @@ pub const GameManager = struct {
     props: *PropsManager,
     dropstacles: *DropStacleManager,
     sound: ?*SoundManager,
+    logo: *GameLogo,
     screen: *movy.Screen,
     frame_counter: usize = 0,
 
@@ -67,6 +69,7 @@ pub const GameManager = struct {
             .enemies = try EnemyManager.init(allocator, screen),
             .dropstacles = try DropStacleManager.init(allocator, screen),
             .shields = try ShieldManager.init(allocator, screen),
+            .logo = try GameLogo.init(allocator, screen),
             .sound = sound_manager,
             .screen = screen,
         };
@@ -80,6 +83,7 @@ pub const GameManager = struct {
         self.starfield.deinit(allocator);
         self.props.deinit(allocator);
         self.dropstacles.deinit(allocator);
+        self.logo.deinit(allocator);
 
         // Clean up sound manager if it was initialized
         if (self.sound) |sound| {
@@ -93,6 +97,7 @@ pub const GameManager = struct {
             if (key.type == .Char and key.sequence[0] == ' ') {
                 self.gamestate.transitionTo(.FadeIn);
                 self.player.lives = Lives;
+                self.logo.active = true;
 
                 if (self.visuals.game.visual) |visual| {
                     visual.stop();
@@ -184,12 +189,15 @@ pub const GameManager = struct {
                 if (self.gamestate.justTransitioned()) {
                     try self.dropstacles.trySpawn(spawn_x, -10, .AmmoDrop);
                 }
+                // Fade in the logo
+                try self.logo.fadeIn();
             },
             .StartingInvincible, .AlmostVulnerable, .Playing => {
                 if (self.gamestate.justTransitioned()) {
                     self.player.ship.visible = true;
                     if (self.gamestate.state == .Playing) {
                         self.shields.activate(.None);
+                        self.logo.active = false;
                     }
                     if (self.gamestate.state == .StartingInvincible) {
                         self.shields.activate(.Default);
@@ -221,6 +229,10 @@ pub const GameManager = struct {
                 self.doDropStacleCollisions();
                 self.handlePropCollision();
                 self.handleDropCollision();
+
+                if (self.gamestate.state == .AlmostVulnerable) {
+                    try self.logo.fadeOut();
+                }
             },
             .Dying,
             => {
@@ -351,6 +363,8 @@ pub const GameManager = struct {
 
         // VisualsManager adds its surfaces on demand, and dims, etc
         self.screen.output_surfaces.clearRetainingCapacity();
+        if (self.logo.active)
+            try self.screen.addRenderSurface(self.logo.surface);
         try self.vismanager.addRenderSurfaces();
         self.screen.renderOnTop();
 
