@@ -7,6 +7,9 @@ pub fn build(b: *std.Build) void {
     const dep_movy = b.dependency("movy", .{});
     const mod_movy = dep_movy.module("movy");
 
+    const dep_resid = b.dependency("resid", .{});
+    const mod_resid = dep_resid.module("resid");
+
     const name = "1st-shot";
 
     const game_exe = b.addExecutable(.{
@@ -17,7 +20,9 @@ pub fn build(b: *std.Build) void {
     });
     game_exe.addIncludePath(b.path("src/core/lodepng/"));
     game_exe.root_module.addImport("movy", mod_movy);
+    game_exe.root_module.addImport("resid", mod_resid);
     game_exe.linkLibC();
+    game_exe.linkSystemLibrary("SDL2");
     b.installArtifact(game_exe);
 
     // Add run step for main game
