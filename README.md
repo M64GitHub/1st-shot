@@ -1,3 +1,5 @@
+# 1ST-SHOT
+
 ```
  ____  ____________________        _________ ___ ___ ___________________
 /_   |/   _____/\__    ___/       /   _____//   X   \\_      \__    ___/
@@ -7,7 +9,7 @@
              \/                          \/       \/         \/         
 ```
 
-## **Next-Generation Terminal Bullet Hell**
+## **Next-Level Terminal Bullet Hell**
 
 *Authentic Commodore 64 SID music. Subpixel-smooth sprite animation. Explosions and bonus points. All in your terminal.*
 
