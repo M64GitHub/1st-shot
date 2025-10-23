@@ -11,10 +11,11 @@
 
 ## **Next-Level Terminal Bullet Hell**
 
-*Authentic Commodore 64 SID music. Subpixel-smooth sprite animation. Explosions and bonus points. All in your terminal.*
+Authentic Commodore 64 SID music. Subpixel-smooth sprite animation. Explosions and bonus points. All in your terminal.
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
----
+
+> *"The limitations aren't in the medium — they're in our imagination."*
 
 This isn't your typical ASCII roguelike. **1st-shot** pushes terminal gaming into uncharted territory with technology that rivals modern GUI games:
 
@@ -333,7 +334,7 @@ MIT. Hack it, spread it!
 
 ## Join the Terminal Revolution
 
-**1st-shot** proves that terminal gaming can be a serious platform for sophisticated game development. The limitations aren't in the medium — they're in our imagination.
+**1st-shot** wants to proove that terminal gaming can be a serious platform for sophisticated game development. The limitations aren't in the medium — they're in our imagination.
 
 *What's your shot?*
 
