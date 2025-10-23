@@ -11,7 +11,7 @@
 
 ## **Next-Level Terminal Bullet Hell**
 
-Authentic Commodore 64 SID music. Subpixel-smooth sprite animation. Explosions and bonus points. All in your terminal.
+Authentic Commodore 64 SID music. Subpixel-smooth sprite movement. Explosions and bonus points. All in your terminal.
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
