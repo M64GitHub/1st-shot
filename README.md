@@ -41,7 +41,7 @@ PNG sprite sheets with frame-based animation, not ASCII art. Object pooling prev
 Audio runs in its own thread, updating every 35ms independently of the game loop. No audio stutter, no frame drops.
 
 ### 💥 **Complete Game Engine**
-- **8 explosion types** with particle effects
+- **8 explosion types**
 - **200-star parallax starfield** with depth-based speed
 - **Multiple weapon systems** (spread shot, default)
 - **Shield mechanics** with visual overlays
@@ -230,7 +230,7 @@ Each game system is a dedicated manager:
 - `ObstacleManager` - Asteroid field
 - `WeaponManager` - Player weapons
 - `SoundManager` - Audio (optional, graceful degradation)
-- `ExplosionManager` - Particle effects
+- `ExplosionManager` - Spawns as many as required, also delayed
 - ... and 9 more!
 
 Clean separation of concerns, easy to extend.
@@ -253,7 +253,7 @@ Clean separation of concerns, easy to extend.
 │   ├── PlayerShip.zig        # Player entity
 │   ├── WeaponManager.zig     # Weapon systems
 │   ├── ShieldManager.zig     # Shield mechanics
-│   ├── ExplosionManager.zig  # Particle effects
+│   ├── ExplosionManager.zig  # Spawns Explosions
 │   ├── Starfield.zig         # Background starfield
 │   └── ... (12 more managers)
 ├── assets/
@@ -359,10 +359,10 @@ This project showcases Zig's strengths:
 ### What 1st-shot brings to terminal gaming:
 
 - High-res PNG sprites with 24-bit color
-- Subpixel movement system for smooth animation
+- Subpixel movement system for smooth movements
 - Authentic C64 SID chip music with dynamic sound effects
 - Three enemy types with different behavior patterns
-- Full particle effects, shields, weapons, and power-ups
+- Fully animated effects, shields, weapons, and power-ups
 - Multi-threaded architecture for audio independence
 
 ---
