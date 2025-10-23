@@ -20,7 +20,7 @@ pub fn build(b: *std.Build) void {
     game_exe.linkLibC();
     b.installArtifact(game_exe);
 
-    // Add run step
+    // Add run step for main game
     const run_game = b.addRunArtifact(game_exe);
     run_game.step.dependOn(b.getInstallStep());
     if (b.args) |args| run_game.addArgs(args);
@@ -28,4 +28,26 @@ pub fn build(b: *std.Build) void {
         b.fmt("run-{s}", .{name}),
         b.fmt("Run {s}", .{name}),
     ).dependOn(&run_game.step);
+
+    // Demo: Subpixel movement comparison
+    const demo_name = "demo-subpixel";
+    const demo_exe = b.addExecutable(.{
+        .name = demo_name,
+        .root_source_file = b.path("src/demo_subpixel.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    demo_exe.addIncludePath(b.path("src/core/lodepng/"));
+    demo_exe.root_module.addImport("movy", mod_movy);
+    demo_exe.linkLibC();
+    b.installArtifact(demo_exe);
+
+    // Add run step for demo
+    const run_demo = b.addRunArtifact(demo_exe);
+    run_demo.step.dependOn(b.getInstallStep());
+    if (b.args) |args| run_demo.addArgs(args);
+    b.step(
+        b.fmt("run-{s}", .{demo_name}),
+        b.fmt("Run {s}", .{demo_name}),
+    ).dependOn(&run_demo.step);
 }

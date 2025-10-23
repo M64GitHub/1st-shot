@@ -108,6 +108,7 @@ pub const Starfield = struct {
                 star.accumulator -= self.threshold;
             }
 
+            // when off the screen
             if (star.y >= h) {
                 // reset the star
                 star.y = 0;
@@ -116,6 +117,8 @@ pub const Starfield = struct {
                 star.adder_value = star.z + 50;
                 star.accumulator = 0;
             }
+
+            // index into RenderSurface maps
             const map_idx =
                 @as(usize, @intCast(star.y)) * w +
                 @as(usize, @intCast(star.x));
