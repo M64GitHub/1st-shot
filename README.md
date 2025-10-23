@@ -11,7 +11,7 @@
 
 ## **Next-Generation Terminal Bullet Hell**
 
-*Authentic Commodore 64 SID music. Subpixel-smooth sprite animation. Advanced enemy AI. All in your terminal.*
+*Authentic Commodore 64 SID music. Subpixel-smooth sprite animation. Explosions and bonus points. All in your terminal.*
 
 ---
 
@@ -261,8 +261,7 @@ Clean separation of concerns, easy to extend.
 │   └── audio/
 │       ├── cnii.dmp          # SID music (register dump)
 │       └── *.wav             # Sound effects
-├── build.zig                 # Build configuration
-└── CLAUDE.md                 # Developer reference
+└─── build.zig                 # Build configuration
 ```
 
 ---
