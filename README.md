@@ -11,31 +11,31 @@
 
 ## **Next-Level Terminal Bullet Hell**
 
-Authentic Commodore 64 SID music. Subpixel-smooth sprite movement. Explosions and bonus points. All in your terminal.
+Authentic SID sound. Smooth subpixel motion. Explosions, power-ups, and bonus points — all rendered right inside your terminal.
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
 > *"The limitations aren't in the medium — they're in our imagination."*
 
-This isn't your typical ASCII roguelike. **1st-shot** pushes terminal gaming into uncharted territory with technology that rivals modern GUI games:
+1st-shot isn’t a typical ASCII roguelike. It explores how far a terminal can go — combining modern rendering and sound techniques with retro precision.
 
 ### **Authentic SID Chip Music**
-The **world's first terminal game** with real Commodore 64 SID chip emulation, running in a dedicated background thread. Experience the iconic sounds of the C64 era while you dodge bullets.
+One of the first terminal games to integrate authentic Commodore 64 SID chip emulation, running in its own audio thread.
 
 ### **Real-Time Audio Mixing**
 Dynamic WAV sound effects seamlessly mixed into the SID music stream. Explosions, weapons, power-ups — all with zero audio interruption or glitches.
 
 ### **Subpixel-Smooth Motion**
-Forget choppy ASCII movement. A custom subpixel accumulator system allows sprites to move at fractional pixel speeds, creating smooth motion at any velocity. Each sprite glides pixel-by-pixel with precise sub-frame positioning.
+A custom subpixel accumulator system enables fractional pixel speeds, producing motion that feels fluid and continuous — even in a text terminal.
 
 ### **Three Enemy Types with Distinct Behaviors**
-Different enemy patterns with formation flying, state machines, and targeting:
+Distinct enemy behaviors implemented through formation logic, state machines, and simple targeting:
 - **SingleEnemy**: Straight or zigzag patterns with global wave sync
 - **SwarmEnemy**: Snake-like formations that grow over time (up to 17 sprites!)
 - **ShooterEnemy**: State machine behavior with projectile tracking and orphaned bullet mechanics - beware, it aims at You!
 
 ### **True Sprite Graphics**
-PNG sprite sheets with frame-based animation, not ASCII art. Object pooling prevents allocation overhead. Buffered rendering eliminates flicker.
+Uses real PNG sprite sheets for frame-based animation. Rendering is buffered to eliminate flicker, and object pooling minimizes runtime allocations.
 
 ### **Multi-Threaded Architecture**
 Audio runs in its own thread, updating every 35ms independently of the game loop. No audio stutter, no frame drops.
@@ -303,7 +303,7 @@ while (true) {
 
 ## Why Zig?
 
-This project leverages Zig's strengths:
+Built with Zig, this project demonstrates some of the language’s strongest capabilities:
 
 - **C Interop**: Seamless SDL2 and C library integration
 - **Manual Memory Control**: Zero GC, predictable performance
@@ -335,7 +335,7 @@ MIT. Hack it, spread it!
 
 ## Join the Terminal Revolution
 
-**1st-shot** wants to proove that terminal gaming can be a serious platform for sophisticated game development. The limitations aren't in the medium — they're in our imagination.
+**1st-shot** wants to proove that terminal gaming can be a serious platform for sophisticated game development. The medium never limits us — only imagination does.
 
 *What's your shot?*
 
