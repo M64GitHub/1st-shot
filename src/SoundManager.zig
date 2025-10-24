@@ -17,8 +17,13 @@ pub const SoundEffectType = enum {
     ExplosionHuge,
     Weapon1Fired,
     Weapon2Fired,
-    Collectible,
     ShieldActivated,
+
+    CollectibleAmmo,
+    CollectibleBonus,
+    CollectibleJackpot,
+    CollectibleLive,
+    CollectibleShield,
 };
 
 /// Background thread function that continuously updates the music player
@@ -41,8 +46,13 @@ pub const SoundManager = struct {
     wav_explosion_huge: WavData,
     wav_weapon1_fired: WavData,
     wav_weapon2_fired: WavData,
-    wav_collectible: WavData,
     wav_shield_activated: WavData,
+
+    wav_collectible_ammo: WavData,
+    wav_collectible_bonus: WavData,
+    wav_collectible_jackpot: WavData,
+    wav_collectible_life: WavData,
+    wav_collectible_shield: WavData,
 
     is_playing: bool,
     allocator: std.mem.Allocator,
@@ -65,6 +75,7 @@ pub const SoundManager = struct {
             sid.deinit();
             return null;
         };
+        errdefer sid.deinit();
 
         // Wrap it in a MixingDumpPlayer
         var player = MixingDumpPlayer.init(allocator, dump_player) catch {
@@ -161,12 +172,12 @@ pub const SoundManager = struct {
         };
         errdefer wav_weapon1_fired.deinit();
 
-        var wav_collectible = WavLoader.load(
+        var wav_collectible_ammo = WavLoader.load(
             allocator,
-            "assets/audio/collect.wav",
+            "assets/audio/collect_dummy.wav",
         ) catch |err| {
             std.debug.print(
-                "[SOUND] Failed to load explosion2.wav for collectible: {}\n",
+                "[SOUND] Failed to load wav for collectible: {}\n",
                 .{err},
             );
             wav_weapon2_fired.deinit();
@@ -178,7 +189,94 @@ pub const SoundManager = struct {
             sid.deinit();
             return null;
         };
-        errdefer wav_collectible.deinit();
+        errdefer wav_collectible_ammo.deinit();
+
+        var wav_collectible_bonus = WavLoader.load(
+            allocator,
+            "assets/audio/collect_bonus.wav",
+        ) catch |err| {
+            std.debug.print(
+                "[SOUND] Failed to load wav for collectible: {}\n",
+                .{err},
+            );
+            wav_collectible_ammo.deinit();
+            wav_weapon2_fired.deinit();
+            wav_weapon2_fired.deinit();
+            wav_weapon1_fired.deinit();
+            wav_explosion_huge.deinit();
+            wav_explosion_big.deinit();
+            wav_explosion_small.deinit();
+            player.deinit();
+            sid.deinit();
+            return null;
+        };
+        errdefer wav_collectible_bonus.deinit();
+
+        var wav_collectible_jackpot = WavLoader.load(
+            allocator,
+            "assets/audio/collect_dummy.wav",
+        ) catch |err| {
+            std.debug.print(
+                "[SOUND] Failed to load wav for collectible: {}\n",
+                .{err},
+            );
+            wav_collectible_bonus.deinit();
+            wav_collectible_ammo.deinit();
+            wav_weapon2_fired.deinit();
+            wav_weapon1_fired.deinit();
+            wav_explosion_huge.deinit();
+            wav_explosion_big.deinit();
+            wav_explosion_small.deinit();
+            player.deinit();
+            sid.deinit();
+            return null;
+        };
+        errdefer wav_collectible_jackpot.deinit();
+
+        var wav_collectible_life = WavLoader.load(
+            allocator,
+            "assets/audio/collect_dummy.wav",
+        ) catch |err| {
+            std.debug.print(
+                "[SOUND] Failed to load wav for collectible: {}\n",
+                .{err},
+            );
+            wav_collectible_jackpot.deinit();
+            wav_collectible_bonus.deinit();
+            wav_collectible_ammo.deinit();
+            wav_weapon2_fired.deinit();
+            wav_weapon1_fired.deinit();
+            wav_explosion_huge.deinit();
+            wav_explosion_big.deinit();
+            wav_explosion_small.deinit();
+            player.deinit();
+            sid.deinit();
+            return null;
+        };
+        errdefer wav_collectible_life.deinit();
+
+        var wav_collectible_shield = WavLoader.load(
+            allocator,
+            "assets/audio/collect_dummy.wav",
+        ) catch |err| {
+            std.debug.print(
+                "[SOUND] Failed to load wav for collectible: {}\n",
+                .{err},
+            );
+            wav_collectible_life.deinit();
+            wav_collectible_jackpot.deinit();
+            wav_collectible_bonus.deinit();
+            wav_collectible_ammo.deinit();
+            wav_weapon2_fired.deinit();
+            wav_weapon1_fired.deinit();
+            wav_explosion_huge.deinit();
+            wav_explosion_big.deinit();
+            wav_explosion_small.deinit();
+            player.deinit();
+            sid.deinit();
+            return null;
+        };
+        errdefer wav_collectible_shield.deinit();
 
         var wav_shield_activated = WavLoader.load(
             allocator,
@@ -188,7 +286,11 @@ pub const SoundManager = struct {
                 "[SOUND] Failed to load explosion3.wav for shield: {}\n",
                 .{err},
             );
-            wav_collectible.deinit();
+            wav_collectible_shield.deinit();
+            wav_collectible_life.deinit();
+            wav_collectible_jackpot.deinit();
+            wav_collectible_bonus.deinit();
+            wav_collectible_ammo.deinit();
             wav_weapon2_fired.deinit();
             wav_weapon1_fired.deinit();
             wav_explosion_huge.deinit();
@@ -203,7 +305,11 @@ pub const SoundManager = struct {
         // Initialize SDL audio
         if (SDL.SDL_Init(SDL.SDL_INIT_AUDIO) < 0) {
             wav_shield_activated.deinit();
-            wav_collectible.deinit();
+            wav_collectible_shield.deinit();
+            wav_collectible_life.deinit();
+            wav_collectible_jackpot.deinit();
+            wav_collectible_bonus.deinit();
+            wav_collectible_ammo.deinit();
             wav_weapon2_fired.deinit();
             wav_weapon1_fired.deinit();
             wav_explosion_huge.deinit();
@@ -219,7 +325,11 @@ pub const SoundManager = struct {
         const result = allocator.create(SoundManager) catch {
             SDL.SDL_Quit();
             wav_shield_activated.deinit();
-            wav_collectible.deinit();
+            wav_collectible_shield.deinit();
+            wav_collectible_life.deinit();
+            wav_collectible_jackpot.deinit();
+            wav_collectible_bonus.deinit();
+            wav_collectible_ammo.deinit();
             wav_weapon2_fired.deinit();
             wav_weapon1_fired.deinit();
             wav_explosion_huge.deinit();
@@ -238,7 +348,11 @@ pub const SoundManager = struct {
             .wav_explosion_huge = wav_explosion_huge,
             .wav_weapon1_fired = wav_weapon1_fired,
             .wav_weapon2_fired = wav_weapon2_fired,
-            .wav_collectible = wav_collectible,
+            .wav_collectible_ammo = wav_collectible_ammo,
+            .wav_collectible_bonus = wav_collectible_bonus,
+            .wav_collectible_jackpot = wav_collectible_jackpot,
+            .wav_collectible_life = wav_collectible_life,
+            .wav_collectible_shield = wav_collectible_shield,
             .wav_shield_activated = wav_shield_activated,
             .is_playing = true,
             .allocator = allocator,
@@ -259,7 +373,11 @@ pub const SoundManager = struct {
         if (dev == 0) {
             SDL.SDL_Quit();
             wav_shield_activated.deinit();
-            wav_collectible.deinit();
+            wav_collectible_shield.deinit();
+            wav_collectible_life.deinit();
+            wav_collectible_jackpot.deinit();
+            wav_collectible_bonus.deinit();
+            wav_collectible_ammo.deinit();
             wav_weapon2_fired.deinit();
             wav_weapon1_fired.deinit();
             wav_explosion_huge.deinit();
@@ -287,7 +405,11 @@ pub const SoundManager = struct {
             SDL.SDL_CloseAudioDevice(dev);
             SDL.SDL_Quit();
             wav_shield_activated.deinit();
-            wav_collectible.deinit();
+            wav_collectible_shield.deinit();
+            wav_collectible_life.deinit();
+            wav_collectible_jackpot.deinit();
+            wav_collectible_bonus.deinit();
+            wav_collectible_ammo.deinit();
             wav_weapon2_fired.deinit();
             wav_weapon1_fired.deinit();
             wav_explosion_huge.deinit();
@@ -320,6 +442,11 @@ pub const SoundManager = struct {
 
         // Clean up all WAV data
         self.wav_shield_activated.deinit();
+        self.wav_collectible_shield.deinit();
+        self.wav_collectible_life.deinit();
+        self.wav_collectible_jackpot.deinit();
+        self.wav_collectible_bonus.deinit();
+        self.wav_collectible_ammo.deinit();
         self.wav_collectible.deinit();
         self.wav_weapon2_fired.deinit();
         self.wav_weapon1_fired.deinit();
@@ -342,7 +469,11 @@ pub const SoundManager = struct {
             .ExplosionHuge => &self.wav_explosion_huge,
             .Weapon1Fired => &self.wav_weapon1_fired,
             .Weapon2Fired => &self.wav_weapon2_fired,
-            .Collectible => &self.wav_collectible,
+            .CollectibleAmmo => &self.wav_collectible_ammo,
+            .CollectibleBonus => &self.wav_collectible_bonus,
+            .CollectibleJackpot => &self.wav_collectible_jackpot,
+            .CollectibleLive => &self.wav_collectible_life,
+            .CollectibleShield => &self.wav_collectible_shield,
             .ShieldActivated => &self.wav_shield_activated,
         };
 

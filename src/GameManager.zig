@@ -792,14 +792,14 @@ pub const GameManager = struct {
 
                 const pos = prop.getCenterCoords();
                 self.exploder.tryExplode(pos.x, pos.y, .SmallPurple) catch {};
-                if (self.sound) |sound| sound.triggerSound(.Collectible);
+                if (self.sound) |sound| sound.triggerSound(.CollectibleAmmo);
             },
             .ExtraLife => {
                 self.player.lives += 1;
 
                 const pos = prop.getCenterCoords();
                 self.exploder.tryExplode(pos.x, pos.y, .SmallCyan) catch {};
-                if (self.sound) |sound| sound.triggerSound(.Collectible);
+                if (self.sound) |sound| sound.triggerSound(.CollectibleLive);
             },
             .ShieldBonus => {
                 self.shields.activate(.Default);
@@ -809,14 +809,14 @@ pub const GameManager = struct {
 
                 const pos = prop.getCenterCoords();
                 self.exploder.tryExplode(pos.x, pos.y, .SmallCyan) catch {};
-                if (self.sound) |sound| sound.triggerSound(.Collectible);
+                if (self.sound) |sound| sound.triggerSound(.CollectibleShield);
             },
             .PointsBonus => {
                 self.player.score += prop.value;
 
                 const pos = prop.getCenterCoords();
                 self.exploder.tryExplode(pos.x, pos.y, .Small) catch {};
-                if (self.sound) |sound| sound.triggerSound(.Collectible);
+                if (self.sound) |sound| sound.triggerSound(.CollectibleBonus);
 
                 // Check for milestone rewards
                 self.checkScoreMilestones();
@@ -899,6 +899,9 @@ pub const GameManager = struct {
                         .SmallPurple,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     if (dropstacle.tryDestroy()) {
                         const pos_drop = dropstacle.getCenterCoords();
 
@@ -908,6 +911,9 @@ pub const GameManager = struct {
                             pos_drop.y,
                             .BigBlu,
                         ) catch {};
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
 
                         // Spawn props based on dropstacle type
                         self.spawnDropStacleReward(
@@ -939,6 +945,9 @@ pub const GameManager = struct {
                         .SmallPurple,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     if (dropstacle.tryDestroy()) {
                         const pos_drop = dropstacle.getCenterCoords();
 
@@ -947,6 +956,9 @@ pub const GameManager = struct {
                             pos_drop.y,
                             .BigBlu,
                         ) catch {};
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
 
                         self.spawnDropStacleReward(
                             pos_drop.x - 8,
@@ -992,7 +1004,6 @@ pub const GameManager = struct {
 
                 // Extra big explosion for jackpot!
                 self.exploder.tryExplode(x, y, .Huge) catch {};
-                if (self.sound) |sound| sound.triggerSound(.ExplosionHuge);
             },
         }
     }
@@ -1033,6 +1044,9 @@ pub const GameManager = struct {
                         pos_enemy.y,
                         .Big,
                     ) catch {};
+
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionHuge);
                 }
             }
         }
@@ -1075,6 +1089,9 @@ pub const GameManager = struct {
                         pos_swarm.y,
                         .Big,
                     ) catch {};
+
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionHuge);
                 }
                 continue;
             }
@@ -1122,6 +1139,9 @@ pub const GameManager = struct {
                     break;
                 }
             }
+
+            if (self.sound) |sound|
+                sound.triggerSound(.ExplosionHuge);
         }
     }
 
@@ -1147,6 +1167,9 @@ pub const GameManager = struct {
                         .Small,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     if (enemy.tryDestroy()) {
                         const pos_enemy = enemy.getCenterCoords();
 
@@ -1156,7 +1179,9 @@ pub const GameManager = struct {
                             pos_enemy.y,
                             .Big,
                         ) catch {};
-                        if (self.sound) |sound| sound.triggerSound(.ExplosionBig);
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
 
                         self.player.score += enemy.score;
 
@@ -1191,6 +1216,9 @@ pub const GameManager = struct {
                         .SmallPurple,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     if (enemy.tryDestroy()) {
                         const pos_enemy = enemy.getCenterCoords();
 
@@ -1199,6 +1227,9 @@ pub const GameManager = struct {
                             pos_enemy.y,
                             .Big,
                         ) catch {};
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
 
                         self.player.score += enemy.score;
 
@@ -1259,6 +1290,9 @@ pub const GameManager = struct {
                         .Small,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     if (swarm.tryDestroy()) {
                         // Get all positions before destroying
                         const positions = swarm.getAllSpritePositions();
@@ -1271,6 +1305,9 @@ pub const GameManager = struct {
                                 .Big,
                             ) catch {};
                         }
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
 
                         self.player.score += swarm.score;
 
@@ -1331,6 +1368,9 @@ pub const GameManager = struct {
                         .SmallPurple,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     if (swarm.tryDestroy()) {
                         // Get all positions before destroying
                         const positions = swarm.getAllSpritePositions();
@@ -1343,6 +1383,9 @@ pub const GameManager = struct {
                                 .Big,
                             ) catch {};
                         }
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
 
                         self.player.score += swarm.score;
 
@@ -1402,6 +1445,9 @@ pub const GameManager = struct {
                             pos_launched.y,
                             .Small,
                         ) catch {};
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionSmall);
                     }
                     break;
                 }
@@ -1438,6 +1484,9 @@ pub const GameManager = struct {
                         pos_shooter.y,
                         .Big,
                     ) catch {};
+
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionHuge);
                 }
                 continue;
             }
@@ -1476,6 +1525,9 @@ pub const GameManager = struct {
                             pos_proj.y,
                             .Big,
                         ) catch {};
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
                     }
                     continue;
                 }
@@ -1514,6 +1566,9 @@ pub const GameManager = struct {
                             pos_proj.y,
                             .Big,
                         ) catch {};
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
                     }
                     continue;
                 }
@@ -1582,6 +1637,9 @@ pub const GameManager = struct {
                         .Small,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     // reverted: Hitting a projectile deals more damage (instant kill with threshold 2)
                     const damage = if (hit_projectile) @as(usize, 1) else @as(usize, 1);
                     if (shooter.tryDestroyWithDamage(damage)) {
@@ -1596,7 +1654,8 @@ pub const GameManager = struct {
                             pos_shooter.y,
                             .Big,
                         ) catch {};
-                        if (self.sound) |sound| sound.triggerSound(.ExplosionBig);
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
 
                         self.player.score += shooter.score;
 
@@ -1671,6 +1730,9 @@ pub const GameManager = struct {
                         .SmallPurple,
                     ) catch {};
 
+                    if (self.sound) |sound|
+                        sound.triggerSound(.ExplosionSmall);
+
                     // Hitting a projectile deals more damage (instant kill with threshold 2)
                     const damage = if (hit_projectile) @as(usize, 2) else @as(usize, 1);
                     if (shooter.tryDestroyWithDamage(damage)) {
@@ -1685,7 +1747,9 @@ pub const GameManager = struct {
                             pos_shooter.y,
                             .Big,
                         ) catch {};
-                        if (self.sound) |sound| sound.triggerSound(.ExplosionBig);
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
 
                         self.player.score += shooter.score;
 
