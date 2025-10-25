@@ -10,11 +10,6 @@
         .movy = .{
             .path = "../movy",
         },
-        .resid = .{
-            // .url = "https://github.com/M64GitHub/zigreSID/archive/refs/tags/v0.4.0-alpha.tar.gz",
-            // .hash = "resid-0.4.0-LzaBAhk4CwDmqAc2eFV0-PTn1l86jNLrg7oaZ4RcL3vT",
-            .path = "../zigreSID",
-        },
     },
 
     .paths = .{
