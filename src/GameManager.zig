@@ -1135,13 +1135,13 @@ pub const GameManager = struct {
                             pos_tail.y,
                             .Big,
                         ) catch {};
+
+                        if (self.sound) |sound|
+                            sound.triggerSound(.ExplosionHuge);
                     }
                     break;
                 }
             }
-
-            if (self.sound) |sound|
-                sound.triggerSound(.ExplosionHuge);
         }
     }
 
