@@ -43,9 +43,6 @@ Distinct enemy behaviors implemented through formation logic, state machines, an
 #### **True Sprite Graphics**
 Uses real PNG sprite sheets for frame-based animation. Rendering is buffered to eliminate flicker, and object pooling minimizes runtime allocations.
 
-#### **Multi-Threaded Architecture**
-Audio runs in its own thread, updating independently of the game loop. No audio stutter, no frame drops.
-
 ### **Complete Game Engine**
 - **3 explosion types**
 - **200-star parallax starfield** with depth-based speed
@@ -88,6 +85,7 @@ zig build run-1st-shot
 | **P** / **Up**| Pause / Unpause |
 | **ESC** | Quit |
 
+Check the source for the cheat codes ;) !
 ---
 
 ## How to Play
@@ -142,27 +140,7 @@ Reach these scores to auto-unlock bonuses:
 - **5,000**: Shield bonus
 - **10,000**: Extra life
 
-
-#### **SID Chip Emulation Integration**
-
-Using the **zigreSID** library, I emulate the legendary MOS Technology 6581/8580 SID chip:
-
-The `MixingDumpPlayer` wraps SID emulation + WAV mixing:
-- Reads SID register dumps (`.dmp` format)
-- Emulates authentic C64 sound synthesis
-- Mixes WAV samples in real-time when effects trigger
-
-#### **Sprite Pooling**
-
-Pre-allocate sprite pools at startup, never allocate during gameplay:
-
-Benefits:
-- Zero allocation overhead during gameplay
-- Predictable memory usage
-- No garbage collection pauses
-- `get()` / `release()` pattern for instant reuse
-
-## Development
+## Some Development Notes
 
 **State Machine:**
 - FadeIn → StartingInvincible → AlmostVulnerable → Playing
