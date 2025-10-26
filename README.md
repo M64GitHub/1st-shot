@@ -68,7 +68,7 @@ Uses real PNG sprite sheets for frame-based animation. Rendering is buffered to 
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/1st-shot.git
+git clone https://github.com/M64GitHub/1st-shot.git
 cd 1st-shot
 
 # Build (optimized for ReleaseFast)
