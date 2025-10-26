@@ -6,41 +6,46 @@
  |___/_______  /  |____|         /_______  /\___X_  /\_______  /____|   
              \/                          \/       \/         \/         
 ```
-> **1ST-SHOT** is my first attempt at building a visually rich, animated game right inside the terminal — powered entirely by my rendering engine **movy**.
-> After **Zigtoberfest 2025**, I decided to make this version public so others can **play with it, study it, and modify it**.
-> It’s not a finished game, but a *playable demo and learning project*: smooth main loop, sub-pixel movement, sprite animations, explosions, and SID-style sound — all in pure Zig.
-> Think of it as both a small game and an open invitation to explore movy, experiment, and create your own terminal worlds. (see the RELEASE-NOTES.md!)
+> **1ST-SHOT** is my first attempt at building a visually rich, animated game inside the terminal — powered entirely by my rendering engine **movy**.  
+> After **Zigtoberfest 2025**, I wanted to make this version public so others can **play with it, study it, and modify it**.  
+> It’s not a finished game — but a *playable demo and learning project*: a smooth main loop, sub-pixel motion, sprite animations, explosions, and SID-style sound — all written in pure Zig.  
+> I built it to show that the terminal can still surprise us — and shine in pixels
+> (See the [RELEASE-NOTES.md](./RELEASE-NOTES.md) for more background.)
+
 
 ## **Next-Level Terminal Bullet Hell**
 
-Authentic SID sound. Smooth subpixel motion. Explosions, power-ups, and bonus points — all rendered right inside your terminal.
+A fast-paced, retro-inspired shooter rendered completely in text-mode graphics.
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
+<p/>
+
 > *"The limitations aren't in the medium — they're in our imagination."*
 
-1st-shot isn’t a typical ASCII roguelike. It explores how far a terminal can go — combining modern rendering and sound techniques with retro precision.
+### What makes 1ST-SHOT special:
 
-### **Authentic SID Chip Music**
+- High-res PNG sprites with 24-bit color
+- Subpixel movement system for smooth movements
+- Authentic C64 SID chip music with dynamic sound effects
+- Three enemy types with different behavior patterns
+- Fully animated effects, shields, weapons, and power-ups
+- Multi-threaded architecture for audio independence
+
+#### **Authentic SID Chip Music**
 One of the first terminal games to integrate authentic Commodore 64 SID chip emulation, running in its own audio thread.
 
-### **Real-Time Audio Mixing**
+#### **Real-Time Audio Mixing**
 Dynamic WAV sound effects seamlessly mixed into the SID music stream. Explosions, weapons, power-ups — all with zero audio interruption or glitches.
 
-### **Subpixel-Smooth Motion**
-A custom subpixel accumulator system enables fractional pixel speeds, producing motion that feels fluid and continuous — even in a text terminal.
-
-### **Three Enemy Types with Distinct Behaviors**
+#### **Three Enemy Types with Distinct Behaviors**
 Distinct enemy behaviors implemented through formation logic, state machines, and simple targeting:
 - **SingleEnemy**: Straight or zigzag patterns with global wave sync
 - **SwarmEnemy**: Snake-like formations that grow over time (up to 17 sprites!)
 - **ShooterEnemy**: State machine behavior with projectile tracking and orphaned bullet mechanics - beware, it aims at You!
 
-### **True Sprite Graphics**
+#### **True Sprite Graphics**
 Uses real PNG sprite sheets for frame-based animation. Rendering is buffered to eliminate flicker, and object pooling minimizes runtime allocations.
-
-### **Multi-Threaded Architecture**
-Audio runs in its own thread, updating every 35ms independently of the game loop. No audio stutter, no frame drops.
 
 ### **Complete Game Engine**
 - **3 explosion types**
@@ -50,7 +55,7 @@ Audio runs in its own thread, updating every 35ms independently of the game loop
 - **Score-based progression** with auto-unlocking rewards
 - **12-state game state machine** (pause, death, respawn, game over)
 
----
+
 
 ## Quick Start
 
@@ -84,7 +89,7 @@ zig build run-1st-shot
 | **P** / **Up**| Pause / Unpause |
 | **ESC** | Quit |
 
----
+Check the source for the cheat codes ;) !
 
 ## How to Play
 
@@ -138,108 +143,7 @@ Reach these scores to auto-unlock bonuses:
 - **5,000**: Shield bonus
 - **10,000**: Extra life
 
----
-
-## Technical Deep Dive
-
-### How It Works
-
-**1st-shot** combines several techniques to create a smooth terminal gaming experience:
-
-#### **Subpixel Movement Algorithm**
-
-Traditional terminal games move objects 1 cell at a time. We use a **fractional accumulator**:
-
-This allows speeds like **0.33 pixels/frame**, creating smooth motion impossible with frame-based movement.
-
-#### **SID Chip Emulation Integration**
-
-Using the **zigreSID** library, we emulate the legendary MOS Technology 6581/8580 SID chip:
-
-The `MixingDumpPlayer` wraps SID emulation + WAV mixing:
-- Reads SID register dumps (`.dmp` format)
-- Emulates authentic C64 sound synthesis
-- Mixes WAV samples in real-time when effects trigger
-
-#### **Sprite Pooling**
-
-Pre-allocate sprite pools at startup, never allocate during gameplay:
-
-Benefits:
-- Zero allocation overhead during gameplay
-- Predictable memory usage
-- No garbage collection pauses
-- `get()` / `release()` pattern for instant reuse
-
-#### **Multi-Threaded Audio**
-
-Game loop: **~180 FPS** (~5600μs per frame including rendering and output)
-Audio thread: **~28 FPS** (35ms update interval)
-
-Runs independently, preventing audio glitches during heavy rendering.
-
-#### **Manager Pattern Architecture**
-
-Each game system is a dedicated manager:
-- `EnemyManager` - Enemy behaviors and spawning
-- `ObstacleManager` - Asteroid field
-- `WeaponManager` - Player weapons
-- `SoundManager` - Audio (optional, graceful degradation)
-- `ExplosionManager` - Spawns as many as required, also delayed
-- ... and 9 more!
-
-Clean separation of concerns, easy to extend.
-
----
-
-## 🛠️ Project Structure
-
-```
-1st-shot/
-├── src/
-│   ├── main.zig              # Entry point, game loop
-│   ├── GameManager.zig       # Central orchestrator
-│   ├── EnemyManager.zig      # Enemy behaviors & spawning
-│   ├── SoundManager.zig      # Audio system
-│   ├── SingleEnemy.zig       # Simple enemy type
-│   ├── SwarmEnemy.zig        # Formation enemy type
-│   ├── ShooterEnemy.zig      # Enemy with projectiles
-│   ├── ObstacleManager.zig   # Asteroids
-│   ├── PlayerShip.zig        # Player entity
-│   ├── WeaponManager.zig     # Weapon systems
-│   ├── ShieldManager.zig     # Shield mechanics
-│   ├── ExplosionManager.zig  # Spawns Explosions
-│   ├── Starfield.zig         # Background starfield
-│   └── ... (12 more managers)
-├── assets/
-│   ├── *.png                 # Sprite sheets
-│   └── audio/
-│       ├── cnii.dmp          # SID music (register dump)
-│       └── *.wav             # Sound effects
-└─── build.zig                # Build configuration
-```
-
----
-
-## Development
-
-### Architecture Highlights
-
-**Flicker-Free Rendering:**
-```zig
-while (true) {
-    inner_loop += 1;
-    poll_input();  // Every loop (responsive)
-
-    if (inner_loop % 100 == 0) {
-        update_game_state();
-        render_everything();
-        screen.output();  // Single output = no flicker
-    } else {
-        sleep(50μs);  // Fast polling
-    }
-}
-```
+## Some Development Notes
 
 **State Machine:**
 - FadeIn → StartingInvincible → AlmostVulnerable → Playing
@@ -268,7 +172,6 @@ while (true) {
 3. Load in `SoundManager.init()`
 4. Call `triggerSound()` at event locations
 
----
 
 ## Dependencies
 
@@ -292,45 +195,19 @@ while (true) {
 - **SDL2** - Audio output and WAV loading
 - **Zig 0.14.0+** - Build system and language
 
----
-
-## Why Zig?
-
-Built with Zig, this project demonstrates some of the language’s strongest capabilities:
-
-- **C Interop**: Seamless SDL2 and C library integration
-- **Manual Memory Control**: Zero GC, predictable performance
-- **Comptime**: Type-safe sprite pools, efficient generics
-- **Error Handling**: Explicit error propagation, no hidden exceptions
-- **Performance**: ReleaseFast builds rival C++ performance
-- **Safety**: Optional overflow checks, bounds checking in debug mode
-
----
-
-## Features
-
-### What 1st-shot brings to terminal gaming:
-
-- High-res PNG sprites with 24-bit color
-- Subpixel movement system for smooth movements
-- Authentic C64 SID chip music with dynamic sound effects
-- Three enemy types with different behavior patterns
-- Fully animated effects, shields, weapons, and power-ups
-- Multi-threaded architecture for audio independence
-
----
 
 ## License
 
 MIT. Hack it, spread it!
 
----
+
 
 ## Join the Terminal Revolution
 
-**1st-shot** wants to proove that terminal gaming can be a serious platform for sophisticated game development. The medium never limits us — only imagination does.
+**1ST-SHOT** proves that terminal gaming can be a serious platform for creativity and design.  
+The medium never limits us — only imagination does.
 
-*What's your shot?*
+*What’s your shot?*
 
 ---
 
