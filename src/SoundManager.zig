@@ -28,10 +28,13 @@ pub const SoundEffectType = enum {
 };
 
 /// Background thread function that continuously updates the music player
+/// When the dump finishes, it automatically restarts to loop the music
 fn playerThreadFunc(player: *MixingDumpPlayer) !void {
     while (player.isPlaying()) {
         if (!player.update()) {
-            player.stop();
+            // Dump finished - reset to beginning for looping
+            // Reset properly resets dump index and all buffer state
+            player.reset();
         }
         std.time.sleep(35 * std.time.ns_per_ms);
     }
