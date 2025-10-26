@@ -9,9 +9,11 @@
 > **1ST-SHOT** is my first attempt at building a visually rich, animated game right inside the terminal — powered entirely by my rendering engine **movy**.
 > After **Zigtoberfest 2025**, I decided to make this version public so others can **play with it, study it, and modify it**.
 > It’s not a finished game, but a *playable demo and learning project*: smooth main loop, sub-pixel movement, sprite animations, explosions, and SID-style sound — all in pure Zig.
-> Think of it as both a small game and an open invitation to explore movy, experiment, and create your own terminal worlds. (see the RELEASE-NOTES.md!)
+> I built it as both a small game and an open invitation to explore movy, experiment, and create your own terminal worlds. (See the [RELEASE-NOTES.md](./RELEASE-NOTES.md) for more background.)
 
 ## **Next-Level Terminal Bullet Hell**
+
+A fast-paced, retro-inspired shooter rendered completely in text-mode graphics.
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
@@ -19,7 +21,7 @@
 
 > *"The limitations aren't in the medium — they're in our imagination."*
 
-### What 1st-shot brings to terminal gaming:
+### What makes 1ST-SHOT special:
 
 - High-res PNG sprites with 24-bit color
 - Subpixel movement system for smooth movements
@@ -200,9 +202,10 @@ MIT. Hack it, spread it!
 
 ## Join the Terminal Revolution
 
-**1st-shot** wants to proove that terminal gaming can be a serious platform for sophisticated game development. The medium never limits us — only imagination does.
+**1ST-SHOT** proves that terminal gaming can be a serious platform for creativity and design.  
+The medium never limits us — only imagination does.
 
-*What's your shot?*
+*What’s your shot?*
 
 ---
 
