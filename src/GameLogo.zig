@@ -1,5 +1,15 @@
 const std = @import("std");
 const movy = @import("movy");
+const LogFile = @import("LogFile.zig").LogFile;
+
+const logo_text =
+    \\ ____  ____________________        _________ ___ ___ ___________________
+    \\/_   |/   _____/\__    ___/       /   _____//   X   \\_      \__    ___/
+    \\ |   |\_____  \   |    |  ______  \_____  \/   _|_   \/  _|_  \|    |
+    \\ |   |/        \  |    | /_____/  /        \    |    /    |    \    |
+    \\ |___/_______  /  |____|         /_______  /\___X_  /\_______  /____|
+    \\             \/                          \/       \/         \/
+;
 
 pub const GameLogo = struct {
     surface: *movy.core.RenderSurface,
@@ -7,18 +17,13 @@ pub const GameLogo = struct {
     fade_duration: usize = 120,
     screen: *movy.Screen = undefined,
     active: bool = true,
+    log_file: *LogFile,
 
-    pub fn init(allocator: std.mem.Allocator, screen: *movy.Screen) !*GameLogo {
-        const logo_text =
-            \\ ____  ____________________        _________ ___ ___ ___________________
-            \\/_   |/   _____/\__    ___/       /   _____//   X   \\_      \__    ___/
-            \\ |   |\_____  \   |    |  ______  \_____  \/   _|_   \/  _|_  \|    |
-            \\ |   |/        \  |    | /_____/  /        \    |    /    |    \    |
-            \\ |___/_______  /  |____|         /_______  /\___X_  /\_______  /____|
-            \\             \/                          \/       \/         \/
-        ;
-
-        // Logo dimensions: 75 chars wide, 6 lines tall
+    pub fn init(
+        allocator: std.mem.Allocator,
+        screen: *movy.Screen,
+        log_file: *LogFile,
+    ) !*GameLogo {
         const width: u32 = 76;
         const height: u32 = 7 * 2;
 
@@ -42,7 +47,13 @@ pub const GameLogo = struct {
         const su_h: i32 = @as(i32, @intCast(surface.h));
 
         const x = @divTrunc(s_w, 2) - @divTrunc(su_w, 2);
-        const y = @divTrunc(s_h, 2) - @divTrunc(su_h, 2);
+        var y = @divTrunc(s_h, 2) - @divTrunc(su_h, 2);
+
+        // y needs to be even for char overlays
+        const y_i: u32 = @intCast(y);
+        if (y_i % 2 != 0) y -= 1;
+
+        log_file.log("[GameLogo]", "y: {}", .{y});
 
         surface.x = x;
         surface.y = y;
@@ -52,10 +63,10 @@ pub const GameLogo = struct {
         self.fade_duration = 60;
         self.fade_frame = 0;
         self.active = true;
+        self.log_file = log_file;
 
         surface.clearTransparent();
 
-        // Render the logo text onto the surface
         _ = self.surface.putStrXYTransparent(
             logo_text,
             0,
@@ -75,15 +86,6 @@ pub const GameLogo = struct {
     pub fn fadeIn(self: *GameLogo) !void {
         // Already fully visible, do nothing
         if (self.fade_frame >= self.fade_duration) return;
-
-        const logo_text =
-            \\ ____  ____________________        _________ ___ ___ ___________________
-            \\/_   |/   _____/\__    ___/       /   _____//   X   \\_      \__    ___/
-            \\ |   |\_____  \   |    |  ______  \_____  \/   _|_   \/  _|_  \|    |
-            \\ |   |/        \  |    | /_____/  /        \    |    /    |    \    |
-            \\ |___/_______  /  |____|         /_______  /\___X_  /\_______  /____|
-            \\             \/                          \/       \/         \/
-        ;
 
         // Calculate fade alpha (0.0 to 1.0)
         const alpha = @as(f32, @floatFromInt(self.fade_frame)) / @as(f32, @floatFromInt(self.fade_duration));
@@ -115,15 +117,6 @@ pub const GameLogo = struct {
             // self.active = false;
             return;
         }
-
-        const logo_text =
-            \\ ____  ____________________        _________ ___ ___ ___________________
-            \\/_   |/   _____/\__    ___/       /   _____//   X   \\_      \__    ___/
-            \\ |   |\_____  \   |    |  ______  \_____  \/   _|_   \/  _|_  \|    |
-            \\ |   |/        \  |    | /_____/  /        \    |    /    |    \    |
-            \\ |___/_______  /  |____|         /_______  /\___X_  /\_______  /____|
-            \\             \/                          \/       \/         \/
-        ;
 
         // Calculate fade alpha (1.0 to 0.0 as frame decrements)
         const alpha = @as(f32, @floatFromInt(self.fade_frame)) / @as(f32, @floatFromInt(self.fade_duration));

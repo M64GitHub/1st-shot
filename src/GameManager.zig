@@ -20,6 +20,7 @@ const PlayerCenter = @import("EnemyManager.zig").PlayerCenter;
 const SoundManager = @import("SoundManager.zig").SoundManager;
 const SoundEffectType = @import("SoundManager.zig").SoundEffectType;
 const GameLogo = @import("GameLogo.zig").GameLogo;
+const LogFile = @import("LogFile.zig").LogFile;
 
 const Lives = 3;
 const Points_For_Ammo: usize = 3000;
@@ -45,6 +46,7 @@ pub const GameManager = struct {
     logo: *GameLogo,
     screen: *movy.Screen,
     frame_counter: usize = 0,
+    log_file: *LogFile,
 
     msgbuf: [1024]u8 = [_]u8{0} ** 1024,
     message: []const u8 = undefined,
@@ -53,8 +55,14 @@ pub const GameManager = struct {
         allocator: std.mem.Allocator,
         screen: *movy.Screen,
     ) !GameManager {
+        // Create log file wrapper (heap-allocated, available early for logging)
+        const log_file = try LogFile.init(allocator, "game.log");
+        errdefer log_file.deinit(allocator);
+
+        log_file.log("[GameManager]", "Initializing GameManager...", .{});
+
         // Try to initialize sound manager (optional - game continues if it fails)
-        const sound_manager = SoundManager.init(allocator);
+        const sound_manager = SoundManager.init(allocator, log_file);
 
         return GameManager{
             .player = try PlayerShip.init(allocator, screen, Lives),
@@ -69,13 +77,16 @@ pub const GameManager = struct {
             .enemies = try EnemyManager.init(allocator, screen),
             .dropstacles = try DropStacleManager.init(allocator, screen),
             .shields = try ShieldManager.init(allocator, screen),
-            .logo = try GameLogo.init(allocator, screen),
+            .logo = try GameLogo.init(allocator, screen, log_file),
             .sound = sound_manager,
             .screen = screen,
+            .log_file = log_file,
         };
     }
 
     pub fn deinit(self: *GameManager, allocator: std.mem.Allocator) void {
+        self.log_file.log("[GameManager]", "Shutting down GameManager...", .{});
+
         self.player.deinit(allocator);
         self.exploder.deinit(allocator);
         self.obstacles.deinit(allocator);
@@ -90,6 +101,15 @@ pub const GameManager = struct {
             sound.deinit();
             allocator.destroy(sound);
         }
+
+        self.log_file.log(
+            "[GameManager]",
+            "GameManager shutdown complete",
+            .{},
+        );
+
+        // Close log file last
+        self.log_file.deinit(allocator);
     }
 
     pub fn onKeyDown(self: *GameManager, key: movy.input.Key) void {
@@ -193,7 +213,9 @@ pub const GameManager = struct {
                 self.player.ship.visible = false;
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
-                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
+                try self.enemies.updateWithPlayerCenter(
+                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                );
                 self.starfield.update();
                 try self.props.update();
                 try self.dropstacles.update();
@@ -230,7 +252,9 @@ pub const GameManager = struct {
                 try self.exploder.update();
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
-                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
+                try self.enemies.updateWithPlayerCenter(
+                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                );
                 self.starfield.update();
                 try self.props.update();
                 try self.dropstacles.update();
@@ -261,7 +285,9 @@ pub const GameManager = struct {
                 try self.exploder.update();
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
-                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
+                try self.enemies.updateWithPlayerCenter(
+                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                );
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
@@ -280,7 +306,9 @@ pub const GameManager = struct {
                 try self.exploder.update();
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
-                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
+                try self.enemies.updateWithPlayerCenter(
+                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                );
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
@@ -309,7 +337,9 @@ pub const GameManager = struct {
                 try self.exploder.update();
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
-                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
+                try self.enemies.updateWithPlayerCenter(
+                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                );
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
@@ -321,7 +351,9 @@ pub const GameManager = struct {
                 try self.exploder.update();
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
-                try self.enemies.updateWithPlayerCenter(PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y });
+                try self.enemies.updateWithPlayerCenter(
+                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                );
                 try self.dropstacles.update();
                 self.starfield.update();
                 try self.props.update();
@@ -420,7 +452,10 @@ pub const GameManager = struct {
         }
     }
 
-    pub fn switchWeaponTo(self: *GameManager, t: WeaponManager.WeaponType) void {
+    pub fn switchWeaponTo(
+        self: *GameManager,
+        t: WeaponManager.WeaponType,
+    ) void {
         if (self.player.weapon_manager.active_weapon == t) return;
 
         self.player.weapon_manager.switchWeapon(t);
@@ -988,7 +1023,11 @@ pub const GameManager = struct {
             },
             .AmmoDrop => {
                 // Spawn ammo prop (50-100 ammo)
-                const ammo_amount = self.dropstacles.rng.random().intRangeAtMost(u32, 50, 100);
+                const ammo_amount = self.dropstacles.rng.random().intRangeAtMost(
+                    u32,
+                    50,
+                    100,
+                );
                 _ = self.props.spawnAmmoBonus(x, y, ammo_amount) catch {};
             },
             .SpecialWeapon => {
@@ -1268,7 +1307,11 @@ pub const GameManager = struct {
                 // Check tail sprites
                 if (!hit) {
                     for (0..swarm.tail_count) |i| {
-                        if (checkCollision(proj.sprite, swarm.tail_sprites[i], coll_inset)) {
+                        if (checkCollision(
+                            proj.sprite,
+                            swarm.tail_sprites[i],
+                            coll_inset,
+                        )) {
                             hit = true;
                             const tail_sprite = swarm.tail_sprites[i];
                             const s_w: i32 = @as(i32, @intCast(tail_sprite.w));
@@ -1336,7 +1379,11 @@ pub const GameManager = struct {
                 var hit_pos_y: i32 = undefined;
 
                 // Check master
-                if (checkCollision(proj.sprite, swarm.master_sprite, coll_inset)) {
+                if (checkCollision(
+                    proj.sprite,
+                    swarm.master_sprite,
+                    coll_inset,
+                )) {
                     hit = true;
                     const center = swarm.getCenterCoords();
                     hit_pos_x = center.x;
@@ -1346,7 +1393,11 @@ pub const GameManager = struct {
                 // Check tail sprites
                 if (!hit) {
                     for (0..swarm.tail_count) |i| {
-                        if (checkCollision(proj.sprite, swarm.tail_sprites[i], coll_inset)) {
+                        if (checkCollision(
+                            proj.sprite,
+                            swarm.tail_sprites[i],
+                            coll_inset,
+                        )) {
                             hit = true;
                             const tail_sprite = swarm.tail_sprites[i];
                             const s_w: i32 = @as(i32, @intCast(tail_sprite.w));
@@ -1476,7 +1527,10 @@ pub const GameManager = struct {
                     self.exodus(sign);
                 } else {
                     // Destroy shooter on shield collision and release sprites
-                    shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+                    shooter.release(
+                        &self.enemies.shooter_master_pool,
+                        &self.enemies.shooter_projectile_pool,
+                    );
 
                     // Explosion
                     self.exploder.tryExplode(
@@ -1517,7 +1571,10 @@ pub const GameManager = struct {
                         self.exodus(sign);
                     } else {
                         // Destroy shooter on shield collision with attached projectile
-                        shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+                        shooter.release(
+                            &self.enemies.shooter_master_pool,
+                            &self.enemies.shooter_projectile_pool,
+                        );
 
                         // Explosion
                         self.exploder.tryExplode(
@@ -1558,7 +1615,10 @@ pub const GameManager = struct {
                         self.exodus(sign);
                     } else {
                         // Destroy shooter on shield collision with attached projectile
-                        shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+                        shooter.release(
+                            &self.enemies.shooter_master_pool,
+                            &self.enemies.shooter_projectile_pool,
+                        );
 
                         // Explosion
                         self.exploder.tryExplode(
@@ -1592,7 +1652,11 @@ pub const GameManager = struct {
                 var hit_pos_y: i32 = undefined;
 
                 // Check master
-                if (checkCollision(proj.sprite, shooter.master_sprite, coll_inset)) {
+                if (checkCollision(
+                    proj.sprite,
+                    shooter.master_sprite,
+                    coll_inset,
+                )) {
                     hit = true;
                     hit_projectile = false;
                     const center = shooter.getCenterCoords();
@@ -1616,7 +1680,11 @@ pub const GameManager = struct {
 
                 if (!hit) {
                     if (shooter.right_projectile) |right_proj| {
-                        if (checkCollision(proj.sprite, right_proj, coll_inset)) {
+                        if (checkCollision(
+                            proj.sprite,
+                            right_proj,
+                            coll_inset,
+                        )) {
                             hit = true;
                             hit_projectile = true;
                             const s_w: i32 = @as(i32, @intCast(right_proj.w));
@@ -1646,7 +1714,10 @@ pub const GameManager = struct {
                         const pos_shooter = shooter.getCenterCoords();
 
                         // Release sprites
-                        shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+                        shooter.release(
+                            &self.enemies.shooter_master_pool,
+                            &self.enemies.shooter_projectile_pool,
+                        );
 
                         // Big explosion when destroyed
                         self.exploder.tryExplode(
@@ -1685,7 +1756,11 @@ pub const GameManager = struct {
                 var hit_pos_y: i32 = undefined;
 
                 // Check master
-                if (checkCollision(proj.sprite, shooter.master_sprite, coll_inset)) {
+                if (checkCollision(
+                    proj.sprite,
+                    shooter.master_sprite,
+                    coll_inset,
+                )) {
                     hit = true;
                     hit_projectile = false;
                     const center = shooter.getCenterCoords();
@@ -1696,7 +1771,11 @@ pub const GameManager = struct {
                 // Check attached projectiles
                 if (!hit) {
                     if (shooter.left_projectile) |left_proj| {
-                        if (checkCollision(proj.sprite, left_proj, coll_inset)) {
+                        if (checkCollision(
+                            proj.sprite,
+                            left_proj,
+                            coll_inset,
+                        )) {
                             hit = true;
                             hit_projectile = true;
                             const s_w: i32 = @as(i32, @intCast(left_proj.w));
@@ -1709,7 +1788,11 @@ pub const GameManager = struct {
 
                 if (!hit) {
                     if (shooter.right_projectile) |right_proj| {
-                        if (checkCollision(proj.sprite, right_proj, coll_inset)) {
+                        if (checkCollision(
+                            proj.sprite,
+                            right_proj,
+                            coll_inset,
+                        )) {
                             hit = true;
                             hit_projectile = true;
                             const s_w: i32 = @as(i32, @intCast(right_proj.w));
@@ -1739,7 +1822,10 @@ pub const GameManager = struct {
                         const pos_shooter = shooter.getCenterCoords();
 
                         // Release sprites
-                        shooter.release(&self.enemies.shooter_master_pool, &self.enemies.shooter_projectile_pool);
+                        shooter.release(
+                            &self.enemies.shooter_master_pool,
+                            &self.enemies.shooter_projectile_pool,
+                        );
 
                         // Big explosion when destroyed
                         self.exploder.tryExplode(
