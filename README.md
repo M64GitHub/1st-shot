@@ -15,9 +15,9 @@
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
-> *"The limitations aren't in the medium — they're in our imagination."*
+<br/>
 
-1st-shot explores how far a terminal can go — combining modern rendering and sound techniques with retro precision.
+> *"The limitations aren't in the medium — they're in our imagination."*
 
 ### What 1st-shot brings to terminal gaming:
 
