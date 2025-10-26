@@ -15,7 +15,7 @@
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
-<br/>
+<p/>
 
 > *"The limitations aren't in the medium — they're in our imagination."*
 
@@ -51,7 +51,7 @@ Uses real PNG sprite sheets for frame-based animation. Rendering is buffered to 
 - **Score-based progression** with auto-unlocking rewards
 - **12-state game state machine** (pause, death, respawn, game over)
 
----
+
 
 ## Quick Start
 
@@ -86,7 +86,6 @@ zig build run-1st-shot
 | **ESC** | Quit |
 
 Check the source for the cheat codes ;) !
----
 
 ## How to Play
 
@@ -169,7 +168,6 @@ Reach these scores to auto-unlock bonuses:
 3. Load in `SoundManager.init()`
 4. Call `triggerSound()` at event locations
 
----
 
 ## Dependencies
 
@@ -193,13 +191,12 @@ Reach these scores to auto-unlock bonuses:
 - **SDL2** - Audio output and WAV loading
 - **Zig 0.14.0+** - Build system and language
 
----
 
 ## License
 
 MIT. Hack it, spread it!
 
----
+
 
 ## Join the Terminal Revolution
 
