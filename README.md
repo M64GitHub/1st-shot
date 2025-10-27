@@ -118,36 +118,6 @@ Reach these scores to auto-unlock bonuses:
 - **5,000**: Shield bonus
 - **10,000**: Extra life
 
-## Some Development Notes
-
-**State Machine:**
-- FadeIn → StartingInvincible → AlmostVulnerable → Playing
-- Death loop: Dying → Respawning → FadeIn
-- Pause transitions with fade effects
-- Game over on lives == 0
-
-**Collision Detection:**
-- Inset-based AABB (adjustable hitboxes)
-- Asymmetric insets for player ship (forgiving bottom, tight top)
-- Props have negative inset (easier to collect)
-
-### Adding New Enemies
-
-1. Create enemy struct with state
-2. Implement `update()` and collision methods
-3. Add sprite pool to `EnemyManager`
-4. Register in spawn system with unlock frame
-5. Add collision detection in `GameManager`
-6. Trigger sounds on destruction
-
-### Adding Sound Effects
-
-1. Add WAV file to `assets/audio/`
-2. Add enum variant to `SoundEffectType`
-3. Load in `SoundManager.init()`
-4. Call `triggerSound()` at event locations
-
-
 ## Dependencies
 
 ### Zig Libraries
