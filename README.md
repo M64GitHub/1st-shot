@@ -8,30 +8,23 @@
  |___/_______  /  |____|         /_______  /\___X_  /\_______  /____|   
              \/                          \/       \/         \/         
 ```
-> **1ST-SHOT** is my first attempt at building a visually rich, animated game inside the terminal — powered entirely by my rendering engine [movy](https://github.com/M64GitHub/movy).  
+Next-Level Terminal Bullet Hell — powered by [movy](https://github.com/M64GitHub/movy)  
+
+> **1ST-SHOT** is my first attempt at building a visually rich, animated game inside the terminal — powered entirely by my rendering engine "movy".  
 > After **Zigtoberfest 2025**, I wanted to make this version public so others can **play with it, study it, and modify it**.  
-> It’s not a finished game — but a *playable demo and learning project*: a smooth main loop, sub-pixel motion, sprite animations, explosions, and SID-style sound — all written in pure Zig.  
-> I built it to show that the terminal can still surprise us — and shine in pixels  
+> It’s not a finished game — it's a *playable demo and learning project*: a smooth main loop, sub-pixel motion, sprite animations, explosions, and SID-style sound with wav mix support — all written in pure Zig.  
+> I built it to show that the terminal can still surprise us — and shine through pixels.  
 > (See the [Release Notes](./RELEASE_NOTES.md) for more background.)
-
-
-## **Next-Level Terminal Bullet Hell**
-
-A fast-paced, retro-inspired shooter rendered completely in text-mode graphics.
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
 <p/>
 
-> *"The limitations aren't in the medium — they're in our imagination."*
-
 ### What makes 1ST-SHOT special:
 
-- PNG sprites with 24-bit color, slicing of animations from spritesheets
-- Subpixel movement system for smooth movements
-- Authentic C64 SID chip music (dedicated audio thread for SID data generation and wav mixing)
-- Three enemy types with different behavior patterns
-- Fully animated effects, shields, weapons, and power-ups
+- Renders PNG sprites in 24-bit color, slicing animations from spritesheets
+- Implements subpixel movement for smooth motion
+- Generates authentic C64 SID music on a dedicated audio thread, mixing PCM in real time
 
 ## Quick Start
 
@@ -139,13 +132,12 @@ Reach these scores to auto-unlock bonuses:
 
 MIT. Hack it, spread it!
 
-## Join the Terminal Revolution
+## Join the Terminal Revolution!
 
-**1ST-SHOT** wants to prove that terminal gaming can be a serious platform for creativity and design.  
-
-The medium never limits us — only imagination does.
-
-*What’s your shot?*
+The revolution isn’t about this game — it’s about what comes next.
+If 1ST-SHOT sparks your curiosity, grab Zig, explore the code, and start shaping your own terminal world.
+Whether it’s a small demo, a new effect, or a full game — build something that glows in the terminal.
+> *"The limitations aren't in the medium — they're in our imagination."*
 
 ---
 
