@@ -25,7 +25,7 @@ A fast-paced, retro-inspired shooter rendered completely in text-mode graphics.
 
 ### What makes 1ST-SHOT special:
 
-- High-res PNG sprites with 24-bit color
+- PNG sprites with 24-bit color, animations from spritesheets
 - Subpixel movement system for smooth movements
 - Authentic C64 SID chip music
 - Three enemy types with different behavior patterns
