@@ -27,35 +27,10 @@ A fast-paced, retro-inspired shooter rendered completely in text-mode graphics.
 
 - High-res PNG sprites with 24-bit color
 - Subpixel movement system for smooth movements
-- Authentic C64 SID chip music with dynamic sound effects
+- Authentic C64 SID chip music
 - Three enemy types with different behavior patterns
 - Fully animated effects, shields, weapons, and power-ups
-- Multi-threaded architecture for audio independence
-
-#### **Authentic SID Chip Music**
-One of the first terminal games to integrate authentic Commodore 64 SID chip emulation, running in its own audio thread.
-
-#### **Real-Time Audio Mixing**
-Dynamic WAV sound effects seamlessly mixed into the SID music stream. Explosions, weapons, power-ups — all with zero audio interruption or glitches.
-
-#### **Three Enemy Types with Distinct Behaviors**
-Distinct enemy behaviors implemented through formation logic, state machines, and simple targeting:
-- **SingleEnemy**: Straight or zigzag patterns with global wave sync
-- **SwarmEnemy**: Snake-like formations that grow over time (up to 17 sprites!)
-- **ShooterEnemy**: State machine behavior with projectile tracking and orphaned bullet mechanics - beware, it aims at You!
-
-#### **True Sprite Graphics**
-Uses real PNG sprite sheets for frame-based animation. Rendering is buffered to eliminate flicker, and object pooling minimizes runtime allocations.
-
-### **Complete Game Engine**
-- **3 explosion types**
-- **200-star parallax starfield** with depth-based speed
-- **Multiple weapon systems** (spread shot, default)
-- **Shield mechanics** with visual overlays
-- **Score-based progression** with auto-unlocking rewards
-- **12-state game state machine** (pause, death, respawn, game over)
-
-
+- Dedicated audio thread for SID data generation and wav effect mixing 
 
 ## Quick Start
 
