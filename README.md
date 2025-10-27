@@ -71,7 +71,7 @@ Check the source for the cheat codes ;) !
 
 ### Survive the onslaught!
 
-**Destroy enemies and asteroids** to earn points. **Collect power-ups** to upgrade your ship. **Avoid collision** or use shields to survive.
+**Destroy enemies and asteroids** to earn points. **Collect power-ups** to upgrade your ship. **Avoid collision** to survive.
 
 ### Enemy Types
 
@@ -89,7 +89,7 @@ Check the source for the cheat codes ;) !
 - Health: 15 hits (hit the head!)
 
 #### **ShooterEnemy** (350 pts)
-- Advanced AI with state machine
+- Simple "intelligence" with state machine
 - Fires two tracking projectiles at your position
 - **Danger**: When destroyed, attached bullets become orphans and fall!
 - Unlocks at **2000 frames (~33 seconds)**
@@ -104,13 +104,14 @@ Check the source for the cheat codes ;) !
 
 ### Dropstacles
 
-Shoot these to collect rewards (but don't touch them!):
+The blue round objects. Shoot these to collect rewards (but don't touch them!):
 - **ShieldDrop** (25%)
 - **LifeDrop** (20%)
 - **AmmoDrop** (40%)
 - **Jackpot** (5%): Shield + Life + 100 Ammo!
 
-They all look the same, the actual reward will be a surprise.
+They all look the same, the actual reward will be a surprise.  
+(numbers in brackets are the chance for the reward type)
 
 ### Score Milestones
 
