@@ -136,7 +136,8 @@ MIT. Hack it, spread it!
 
 The revolution isn’t about this game — it’s about what comes next.
 If 1ST-SHOT sparks your curiosity, grab Zig, explore the code, and start shaping your own terminal world.
-Whether it’s a small demo, a new effect, or a full game — build something that glows in the terminal.
+Whether it’s a small demo, a new effect, or a full game — build something that glows in the terminal.  
+
 > *"The limitations aren't in the medium — they're in our imagination."*
 
 ---
