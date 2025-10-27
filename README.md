@@ -142,4 +142,4 @@ Whether it’s a small demo, a new effect, or a full game — build something th
 
 ---
 
-**Made with ❤️ and Zig**
+**Made with 💜 and Zig**
