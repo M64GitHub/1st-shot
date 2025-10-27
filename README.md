@@ -134,7 +134,7 @@ Reach these scores to auto-unlock bonuses:
 ### System Dependencies
 
 - **SDL2** - Audio output and WAV loading
-- **Zig 0.14.0+** - Build system and language
+- **Zig 0.14.1** - Build system and language
 
 ## License
 
