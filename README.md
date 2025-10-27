@@ -122,16 +122,9 @@ Reach these scores to auto-unlock bonuses:
 
 ### Zig Libraries
 
-- **movy** - Terminal graphics library
-  - Buffered screen rendering
-  - PNG sprite loading and animation
-  - Input handling (keyboard, mouse)
-  - Color support (24-bit RGB)
-  - Sprite pooling system
+- **movy** - Terminal rendering engine
 
-- **zigreSID** - SID chip emulator
-  - MOS 6581/8580 emulation
-  - DumpPlayer for .dmp files
+- **zigreSID** - MOS 6581/8580 SID chip emulator
   - MixingDumpPlayer for WAV mixing
   - SDL2 audio output
 
@@ -140,16 +133,14 @@ Reach these scores to auto-unlock bonuses:
 - **SDL2** - Audio output and WAV loading
 - **Zig 0.14.0+** - Build system and language
 
-
 ## License
 
 MIT. Hack it, spread it!
 
-
-
 ## Join the Terminal Revolution
 
-**1ST-SHOT** proves that terminal gaming can be a serious platform for creativity and design.  
+**1ST-SHOT** wants to prove that terminal gaming can be a serious platform for creativity and design.  
+
 The medium never limits us — only imagination does.
 
 *What’s your shot?*
