@@ -153,7 +153,7 @@ Reach these scores to auto-unlock bonuses:
 ### Zig Libraries
 
 - **movy** - Terminal graphics library
-  - Double-buffered screen rendering
+  - Buffered screen rendering
   - PNG sprite loading and animation
   - Input handling (keyboard, mouse)
   - Color support (24-bit RGB)
