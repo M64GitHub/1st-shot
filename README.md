@@ -9,7 +9,7 @@
 > **1ST-SHOT** is my first attempt at building a visually rich, animated game inside the terminal — powered entirely by my rendering engine [movy](https://github.com/M64GitHub/movy).  
 > After **Zigtoberfest 2025**, I wanted to make this version public so others can **play with it, study it, and modify it**.  
 > It’s not a finished game — but a *playable demo and learning project*: a smooth main loop, sub-pixel motion, sprite animations, explosions, and SID-style sound — all written in pure Zig.  
-> I built it to show that the terminal can still surprise us — and shine in pixels
+> I built it to show that the terminal can still surprise us — and shine in pixels  
 > (See the [Release Notes](./RELEASE_NOTES.md) for more background.)
 
 
