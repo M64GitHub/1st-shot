@@ -40,8 +40,6 @@ A fast-paced, retro-inspired shooter rendered completely in text-mode graphics.
 - **SDL2** (for audio)
 - Terminal with 24-bit color support (most modern terminals)
 
-(zig 0.14.0 should also work, but I stopped testing on different version, am currently on 14.1 for all my repos)
-
 ### Install
 
 ```bash
