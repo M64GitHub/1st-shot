@@ -1,3 +1,5 @@
+![License](https://img.shields.io/badge/License-MIT-85adf2?style=flat)
+![Zig](https://img.shields.io/badge/Zig-0.14.1-orange?style=flat)
 ```
  ____  ____________________        _________ ___ ___ ___________________
 /_   |/   _____/\__    ___/       /   _____//   X   \\_      \__    ___/
