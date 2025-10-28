@@ -3,10 +3,9 @@
 Hi everyone,
 
 After **Zigtoberfest 2025**, I wanted to make this version public so others can **play with it, study it, and modify it**.
-This is **1ST-SHOT**, my very first experiment in building a *visually rich, animated game right inside the terminal*.
-It’s powered entirely by my rendering engine **movy**, which I created to bring color, motion, and even SID-style sound to text-mode environments.
+This is **1ST-SHOT**, my very first experiment in building a visually rich, animated game right inside the terminal.
 
-I originally built this as part of my talk at Zigtoberfest, and I’m releasing it exactly as it is today — not because it’s finished, but because it already *feels alive*.
+I originally built this as part of my talk at Zigtoberfest, and I’m releasing it exactly as it is today — not because it’s finished, but because it already feels alive, and to start the Terminal Revolution! ;)
 
 ## What this release is
 
