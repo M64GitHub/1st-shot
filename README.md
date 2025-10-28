@@ -47,8 +47,6 @@ zig build
 zig build run-1st-shot
 ```
 
-*Note: Dependencies (movy and zigreSID) are automatically fetched during build via Zig's dependency manager.*
-
 ### Controls
 
 | Key | Action |
