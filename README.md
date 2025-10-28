@@ -20,7 +20,7 @@ Next-Level Terminal Bullet Hell — powered by [movy](https://github.com/M64GitH
 
 <p/>
 
-### What makes 1ST-SHOT special:
+### Highlights
 
 - Renders PNG sprites in 24-bit color, slicing animations from spritesheets
 - Implements subpixel movement for smooth motion
