@@ -1,5 +1,5 @@
 ![License](https://img.shields.io/badge/License-MIT-85adf2?style=flat)
-![Zig](https://img.shields.io/badge/Zig-0.14.1-orange?style=flat)
+![Zig](https://img.shields.io/badge/Zig-0.15.2-orange?style=flat)
 ```
  ____  ____________________        _________ ___ ___ ___________________
 /_   |/   _____/\__    ___/       /   _____//   X   \\_      \__    ___/
@@ -12,24 +12,29 @@ Next-Level Terminal Bullet Hell — powered by [movy](https://github.com/M64GitH
 
 > **1ST-SHOT** is my first attempt at building a visually rich, animated game inside the terminal — powered entirely by my rendering engine "movy".  
 > After [**Zigtoberfest 2025**](https://www.youtube.com/@zigtoberfest), I wanted to make this version public so others can **play with it, study it, and modify it**.  
-> It’s not a finished game — it's a *playable demo and learning project*: a smooth main loop, sub-pixel motion, sprite animations, explosions, and SID-style sound with wav mix support — all written in pure Zig.  
-> I built it to show that the terminal can still surprise us — and shine through pixels.  
+> It’s not a finished game — it's a *playable demo and learning project* 
 > (See the [Release Notes](./RELEASE_NOTES.md) for more background.)
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
 <p/>
 
-### What makes 1ST-SHOT special:
+### Highlights
 
 - Renders PNG sprites in 24-bit color, slicing animations from spritesheets
 - Implements subpixel movement for smooth motion
+- Steady 71 FPS! (new)
 - Generates authentic C64 SID music on a dedicated audio thread, mixing PCM in real time
+
+## What's New
+
+- **Upgraded to Zig 0.15.2**
+- **Constant FPS rendering:** gameplay now runs at a stable frame rate across all terminals — 71 silky-smooth and consistent FPS no matter your window size! (When font is too small, it will slow down though, no frame is skipped ;) )
 
 ## Quick Start
 
 ### Requirements
-- **Zig 0.14.1**
+- **Zig 0.15.2**
 - **SDL2** (for audio)
 - Terminal with 24-bit color support (most modern terminals)
 
@@ -46,8 +51,6 @@ zig build
 # Run the game
 zig build run-1st-shot
 ```
-
-*Note: Dependencies (movy and zigreSID) are automatically fetched during build via Zig's dependency manager.*
 
 ### Controls
 
@@ -126,7 +129,7 @@ Reach these scores to auto-unlock bonuses:
 ### System Dependencies
 
 - **SDL2** - Audio output and WAV loading
-- **Zig 0.14.1** - Build system and language
+- **Zig 0.15.2** - Build system and language
 
 ## License
 
