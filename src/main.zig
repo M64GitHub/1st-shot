@@ -2,8 +2,6 @@ const std = @import("std");
 const movy = @import("movy");
 const GameManager = @import("GameManager.zig").GameManager;
 
-const stdout = std.io.getStdOut().writer();
-
 const FRAME_DELAY_NS = 14 * std.time.ns_per_ms; // ~71 FPS
 const KEYDOWN_TIME: usize = 5; // key up after 5 frames
 
