@@ -67,7 +67,7 @@ pub const SpreadWeapon = struct {
         self.* = SpreadWeapon{
             .screen = screen,
             .projectiles = [_]Projectile{Projectile{}} ** MaxProjectiles,
-            .projectile_sprites = movy.graphic.SpritePool.init(allocator),
+            .projectile_sprites = movy.graphic.SpritePool.init(),
         };
 
         try self.initSprites(allocator);
@@ -94,7 +94,7 @@ pub const SpreadWeapon = struct {
                 ),
             );
             try sprite.startAnimation("flying");
-            try self.projectile_sprites.addSprite(sprite);
+            try self.projectile_sprites.addSprite(allocator, sprite);
         }
     }
 
@@ -113,10 +113,14 @@ pub const SpreadWeapon = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *SpreadWeapon) !void {
+    pub fn addRenderSurfaces(
+        self: *SpreadWeapon,
+        allocator: std.mem.Allocator,
+    ) !void {
         for (&self.projectiles) |*proj| {
             if (proj.active) {
                 try self.screen.addRenderSurface(
+                    allocator,
                     try proj.sprite.getCurrentFrameSurface(),
                 );
             }

@@ -36,7 +36,7 @@ fn playerThreadFunc(player: *MixingDumpPlayer) !void {
             // Reset properly resets dump index and all buffer state
             player.reset();
         }
-        std.time.sleep(35 * std.time.ns_per_ms);
+        std.Thread.sleep(35 * std.time.ns_per_ms);
     }
 }
 

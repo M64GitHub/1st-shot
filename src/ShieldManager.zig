@@ -76,9 +76,12 @@ pub const ShieldManager = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *ShieldManager) !void {
-        try self.default_shield.addRenderSurfaces();
-        try self.special_shield.addRenderSurfaces();
+    pub fn addRenderSurfaces(
+        self: *ShieldManager,
+        allocator: std.mem.Allocator,
+    ) !void {
+        try self.default_shield.addRenderSurfaces(allocator);
+        try self.special_shield.addRenderSurfaces(allocator);
     }
 
     pub fn getCooldown(self: *ShieldManager) usize {

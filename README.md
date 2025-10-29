@@ -1,5 +1,5 @@
 ![License](https://img.shields.io/badge/License-MIT-85adf2?style=flat)
-![Zig](https://img.shields.io/badge/Zig-0.14.1-orange?style=flat)
+![Zig](https://img.shields.io/badge/Zig-0.15.2-orange?style=flat)
 ```
  ____  ____________________        _________ ___ ___ ___________________
 /_   |/   _____/\__    ___/       /   _____//   X   \\_      \__    ___/
@@ -23,12 +23,18 @@ Next-Level Terminal Bullet Hell — powered by [movy](https://github.com/M64GitH
 
 - Renders PNG sprites in 24-bit color, slicing animations from spritesheets
 - Implements subpixel movement for smooth motion
+- Steady 71 FPS! (new)
 - Generates authentic C64 SID music on a dedicated audio thread, mixing PCM in real time
+
+## What's New
+
+- **Upgraded to Zig 0.15.2**
+- **Constant FPS rendering:** gameplay now runs at a stable frame rate across all terminals — 71 silky-smooth and consistent FPS no matter your window size! (When font is too small, it will slow down though, no frame is skipped ;) )
 
 ## Quick Start
 
 ### Requirements
-- **Zig 0.14.1**
+- **Zig 0.15.2**
 - **SDL2** (for audio)
 - Terminal with 24-bit color support (most modern terminals)
 
@@ -123,7 +129,7 @@ Reach these scores to auto-unlock bonuses:
 ### System Dependencies
 
 - **SDL2** - Audio output and WAV loading
-- **Zig 0.14.1** - Build system and language
+- **Zig 0.15.2** - Build system and language
 
 ## License
 

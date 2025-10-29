@@ -148,10 +148,10 @@ pub const PropsManager = struct {
         const self = try allocator.create(PropsManager);
         self.* = PropsManager{
             .screen = screen,
-            .ammo_pool = movy.graphic.SpritePool.init(allocator),
-            .life_pool = movy.graphic.SpritePool.init(allocator),
-            .shield_pool = movy.graphic.SpritePool.init(allocator),
-            .points_pool = movy.graphic.SpritePool.init(allocator),
+            .ammo_pool = movy.graphic.SpritePool.init(),
+            .life_pool = movy.graphic.SpritePool.init(),
+            .shield_pool = movy.graphic.SpritePool.init(),
+            .points_pool = movy.graphic.SpritePool.init(),
             .active_props = [_]Prop{.{ .active = false }} ** MaxProps,
             .rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp())),
         };
@@ -181,7 +181,7 @@ pub const PropsManager = struct {
                 Sprite.FrameAnimation.init(1, 16, .loopForward, ANI_SPEED),
             );
             try s.startAnimation("pulse");
-            try self.ammo_pool.addSprite(s);
+            try self.ammo_pool.addSprite(allocator, s);
 
             // Extra life sprite
             s = try Sprite.initFromPng(
@@ -196,7 +196,7 @@ pub const PropsManager = struct {
                 Sprite.FrameAnimation.init(1, 16, .loopForward, ANI_SPEED),
             );
             try s.startAnimation("pulse");
-            try self.life_pool.addSprite(s);
+            try self.life_pool.addSprite(allocator, s);
 
             // Shield bonus sprite
             s = try Sprite.initFromPng(
@@ -211,7 +211,7 @@ pub const PropsManager = struct {
                 Sprite.FrameAnimation.init(1, 16, .loopForward, ANI_SPEED),
             );
             try s.startAnimation("pulse");
-            try self.shield_pool.addSprite(s);
+            try self.shield_pool.addSprite(allocator, s);
 
             // Points bonus sprite
             s = try Sprite.initFromPng(
@@ -226,7 +226,7 @@ pub const PropsManager = struct {
                 Sprite.FrameAnimation.init(1, 16, .loopForward, ANI_SPEED),
             );
             try s.startAnimation("pulse");
-            try self.points_pool.addSprite(s);
+            try self.points_pool.addSprite(allocator, s);
         }
     }
 
@@ -342,10 +342,14 @@ pub const PropsManager = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *PropsManager) !void {
+    pub fn addRenderSurfaces(
+        self: *PropsManager,
+        allocator: std.mem.Allocator,
+    ) !void {
         for (&self.active_props) |*prop| {
             if (prop.active) {
                 try self.screen.addRenderSurface(
+                    allocator,
                     try prop.sprite.getCurrentFrameSurface(),
                 );
             }

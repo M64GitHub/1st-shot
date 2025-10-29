@@ -61,9 +61,12 @@ pub const WeaponManager = struct {
         try self.spread_weapon.update();
     }
 
-    pub fn addRenderSurfaces(self: *WeaponManager) !void {
-        try self.default_weapon.addRenderSurfaces();
-        try self.spread_weapon.addRenderSurfaces();
+    pub fn addRenderSurfaces(
+        self: *WeaponManager,
+        allocator: std.mem.Allocator,
+    ) !void {
+        try self.default_weapon.addRenderSurfaces(allocator);
+        try self.spread_weapon.addRenderSurfaces(allocator);
     }
 
     pub fn switchWeapon(self: *WeaponManager, new_weapon: WeaponType) void {

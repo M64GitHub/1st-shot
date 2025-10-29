@@ -67,11 +67,17 @@ pub const GameManager = struct {
         return GameManager{
             .player = try PlayerShip.init(allocator, screen, Lives),
             .gamestate = GameStateManager.init(),
-            .statuswin = try StatusWindow.init(allocator, 16, 8, movy.color.DARK_BLUE, movy.color.GRAY),
+            .statuswin = try StatusWindow.init(
+                allocator,
+                16,
+                8,
+                movy.color.DARK_BLUE,
+                movy.color.GRAY,
+            ),
             .starfield = try Starfield.init(allocator, screen),
             .props = try PropsManager.init(allocator, screen),
             .visuals = try GameVisuals.init(allocator, screen),
-            .vismanager = VisualsManager.init(allocator, screen),
+            .vismanager = VisualsManager.init(screen),
             .exploder = try ExplosionManager.init(allocator, screen),
             .obstacles = try ObstacleManager.init(allocator, screen),
             .enemies = try EnemyManager.init(allocator, screen),
@@ -214,7 +220,10 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
                 try self.enemies.updateWithPlayerCenter(
-                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                    PlayerCenter{
+                        .x = player_center_pos.x,
+                        .y = player_center_pos.y,
+                    },
                 );
                 self.starfield.update();
                 try self.props.update();
@@ -253,7 +262,10 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
                 try self.enemies.updateWithPlayerCenter(
-                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                    PlayerCenter{
+                        .x = player_center_pos.x,
+                        .y = player_center_pos.y,
+                    },
                 );
                 self.starfield.update();
                 try self.props.update();
@@ -286,7 +298,10 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
                 try self.enemies.updateWithPlayerCenter(
-                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                    PlayerCenter{
+                        .x = player_center_pos.x,
+                        .y = player_center_pos.y,
+                    },
                 );
                 try self.dropstacles.update();
                 self.starfield.update();
@@ -307,7 +322,10 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
                 try self.enemies.updateWithPlayerCenter(
-                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                    PlayerCenter{
+                        .x = player_center_pos.x,
+                        .y = player_center_pos.y,
+                    },
                 );
                 try self.dropstacles.update();
                 self.starfield.update();
@@ -338,7 +356,10 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
                 try self.enemies.updateWithPlayerCenter(
-                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                    PlayerCenter{
+                        .x = player_center_pos.x,
+                        .y = player_center_pos.y,
+                    },
                 );
                 try self.dropstacles.update();
                 self.starfield.update();
@@ -352,7 +373,10 @@ pub const GameManager = struct {
                 try self.obstacles.update();
                 const player_center_pos = self.player.ship.getCenterCoords();
                 try self.enemies.updateWithPlayerCenter(
-                    PlayerCenter{ .x = player_center_pos.x, .y = player_center_pos.y },
+                    PlayerCenter{
+                        .x = player_center_pos.x,
+                        .y = player_center_pos.y,
+                    },
                 );
                 try self.dropstacles.update();
                 self.starfield.update();
@@ -393,25 +417,25 @@ pub const GameManager = struct {
     }
 
     // -- render
-    pub fn renderFrame(self: *GameManager) !void {
+    pub fn renderFrame(self: *GameManager, allocator: std.mem.Allocator) !void {
         try self.screen.renderInit(); // clears output surfaces
-        try self.exploder.addRenderSurfaces();
-        try self.player.ship.addRenderSurfaces();
-        try self.player.weapon_manager.addRenderSurfaces();
-        try self.shields.addRenderSurfaces();
-        try self.props.addRenderSurfaces();
-        try self.dropstacles.addRenderSurfaces();
-        try self.enemies.addRenderSurfaces();
-        try self.obstacles.addRenderSurfaces();
+        try self.exploder.addRenderSurfaces(allocator);
+        try self.player.ship.addRenderSurfaces(allocator);
+        try self.player.weapon_manager.addRenderSurfaces(allocator);
+        try self.shields.addRenderSurfaces(allocator);
+        try self.props.addRenderSurfaces(allocator);
+        try self.dropstacles.addRenderSurfaces(allocator);
+        try self.enemies.addRenderSurfaces(allocator);
+        try self.obstacles.addRenderSurfaces(allocator);
 
-        try self.screen.addRenderSurface(self.starfield.out_surface);
+        try self.screen.addRenderSurface(allocator, self.starfield.out_surface);
         self.screen.render();
 
         // VisualsManager adds its surfaces on demand, and dims, etc
         self.screen.output_surfaces.clearRetainingCapacity();
         if (self.logo.active)
-            try self.screen.addRenderSurface(self.logo.surface);
-        try self.vismanager.addRenderSurfaces();
+            try self.screen.addRenderSurface(allocator, self.logo.surface);
+        try self.vismanager.addRenderSurfaces(allocator);
         self.screen.renderOnTop();
 
         self.message = try std.fmt.bufPrint(
@@ -1817,7 +1841,11 @@ pub const GameManager = struct {
                         sound.triggerSound(.ExplosionSmall);
 
                     // Hitting a projectile deals more damage (instant kill with threshold 2)
-                    const damage = if (hit_projectile) @as(usize, 2) else @as(usize, 1);
+                    const damage = if (hit_projectile)
+                        @as(usize, 2)
+                    else
+                        @as(usize, 1);
+
                     if (shooter.tryDestroyWithDamage(damage)) {
                         const pos_shooter = shooter.getCenterCoords();
 

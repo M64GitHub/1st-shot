@@ -88,7 +88,8 @@ pub const GameLogo = struct {
         if (self.fade_frame >= self.fade_duration) return;
 
         // Calculate fade alpha (0.0 to 1.0)
-        const alpha = @as(f32, @floatFromInt(self.fade_frame)) / @as(f32, @floatFromInt(self.fade_duration));
+        const alpha = @as(f32, @floatFromInt(self.fade_frame)) /
+            @as(f32, @floatFromInt(self.fade_duration));
 
         // Convert to RGB value (0 to 255) - fading from black to white
         const color_val = @as(u8, @intFromFloat(alpha * 255.0));
@@ -119,7 +120,8 @@ pub const GameLogo = struct {
         }
 
         // Calculate fade alpha (1.0 to 0.0 as frame decrements)
-        const alpha = @as(f32, @floatFromInt(self.fade_frame)) / @as(f32, @floatFromInt(self.fade_duration));
+        const alpha = @as(f32, @floatFromInt(self.fade_frame)) /
+            @as(f32, @floatFromInt(self.fade_duration));
 
         // Convert to RGB value (255 to 0) - fading from white to black
         const color_val = @as(u8, @intFromFloat(alpha * 255.0));

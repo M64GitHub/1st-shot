@@ -109,9 +109,13 @@ pub const DefaultShield = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *DefaultShield) !void {
+    pub fn addRenderSurfaces(
+        self: *DefaultShield,
+        allocator: std.mem.Allocator,
+    ) !void {
         if (self.active)
             try self.screen.addRenderSurface(
+                allocator,
                 try self.sprite.getCurrentFrameSurface(),
             );
     }
