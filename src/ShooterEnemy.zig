@@ -77,7 +77,8 @@ pub const ShooterEnemy = struct {
     master_sprite: *Sprite = undefined,
     left_projectile: ?*Sprite = null,
     right_projectile: ?*Sprite = null,
-    launched_projectiles: [2]LaunchedProjectile = [_]LaunchedProjectile{.{}} ** 2,
+    launched_projectiles: [2]LaunchedProjectile =
+        [_]LaunchedProjectile{.{}} ** 2,
 
     projectile_pool: *movy.graphic.SpritePool = undefined,
     screen: *movy.Screen = undefined,
@@ -147,9 +148,11 @@ pub const ShooterEnemy = struct {
                 if (self.y > 0) {
                     self.state = .Armed;
                     self.shot_timer = 0;
-                    self.next_shot_delay = rng.random().intRangeAtMost(usize, 60, 90);
+                    self.next_shot_delay =
+                        rng.random().intRangeAtMost(usize, 60, 90);
                     // Randomly choose which projectile to fire first
-                    self.first_shot_side = if (rng.random().boolean()) .Left else .Right;
+                    self.first_shot_side =
+                        if (rng.random().boolean()) .Left else .Right;
                 }
             },
             .Armed => {
@@ -158,14 +161,17 @@ pub const ShooterEnemy = struct {
                     self.launchProjectile(self.first_shot_side, player_center);
                     self.state = .FirstShot;
                     self.shot_timer = 0;
-                    self.next_shot_delay = rng.random().intRangeAtMost(usize, 60, 90);
+                    self.next_shot_delay =
+                        rng.random().intRangeAtMost(usize, 60, 90);
                 }
             },
             .FirstShot => {
                 self.shot_timer += 1;
                 if (self.shot_timer >= self.next_shot_delay) {
                     // Fire the other projectile
-                    const second_side: ProjectileSide = if (self.first_shot_side == .Left) .Right else .Left;
+                    const second_side: ProjectileSide =
+                        if (self.first_shot_side == .Left) .Right else .Left;
+
                     self.launchProjectile(second_side, player_center);
                     self.state = .Disarmed;
                 }
@@ -184,9 +190,15 @@ pub const ShooterEnemy = struct {
         }
     }
 
-    fn launchProjectile(self: *ShooterEnemy, side: ProjectileSide, player_center: PlayerCenter) void {
+    fn launchProjectile(
+        self: *ShooterEnemy,
+        side: ProjectileSide,
+        player_center: PlayerCenter,
+    ) void {
         // Get the projectile sprite and position
-        const projectile_sprite: ?*Sprite = if (side == .Left) self.left_projectile else self.right_projectile;
+        const projectile_sprite: ?*Sprite =
+            if (side == .Left) self.left_projectile else self.right_projectile;
+
         if (projectile_sprite == null) return;
 
         const sprite = projectile_sprite.?;
@@ -268,7 +280,11 @@ pub const ShooterEnemy = struct {
         return true;
     }
 
-    pub fn release(self: *ShooterEnemy, master_pool: *movy.graphic.SpritePool, projectile_pool: *movy.graphic.SpritePool) void {
+    pub fn release(
+        self: *ShooterEnemy,
+        master_pool: *movy.graphic.SpritePool,
+        projectile_pool: *movy.graphic.SpritePool,
+    ) void {
         // Only release if we haven't already
         if (self.sprites_released) return;
 

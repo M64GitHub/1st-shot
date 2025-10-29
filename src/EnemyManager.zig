@@ -289,16 +289,16 @@ pub const EnemyManager = struct {
         const self = try allocator.create(EnemyManager);
         self.* = EnemyManager{
             .screen = screen,
-            .single_enemy_pool = movy.graphic.SpritePool.init(allocator),
-            .swarm_enemy_pool = movy.graphic.SpritePool.init(allocator),
-            .shooter_master_pool = movy.graphic.SpritePool.init(allocator),
-            .shooter_projectile_pool = movy.graphic.SpritePool.init(allocator),
+            .single_enemy_pool = movy.graphic.SpritePool.init(),
+            .swarm_enemy_pool = movy.graphic.SpritePool.init(),
+            .shooter_master_pool = movy.graphic.SpritePool.init(),
+            .shooter_projectile_pool = movy.graphic.SpritePool.init(),
             .active_single_enemies = [_]SingleEnemy{.{ .active = false }} **
                 MaxSingleEnemies,
             .active_swarm_enemies = [_]SwarmEnemy{
                 .{
                     .active = false,
-                    .tail_pool = movy.graphic.SpritePool.init(allocator),
+                    .tail_pool = movy.graphic.SpritePool.init(),
                 },
             } ** MaxSwarmEnemies,
             .active_shooter_enemies = [_]ShooterEnemy{.{ .active = false }} **
@@ -327,7 +327,7 @@ pub const EnemyManager = struct {
                 "fly",
                 Sprite.FrameAnimation.init(1, 12, .loopForward, 1),
             );
-            try self.single_enemy_pool.addSprite(s);
+            try self.single_enemy_pool.addSprite(allocator, s);
         }
 
         // Initialize SwarmEnemy sprite pools (each swarm has its own tail pool)
@@ -344,7 +344,7 @@ pub const EnemyManager = struct {
                     "fly",
                     Sprite.FrameAnimation.init(1, 12, .loopForward, 1),
                 );
-                try swarm.tail_pool.addSprite(s);
+                try swarm.tail_pool.addSprite(allocator, s);
             }
         }
 
@@ -363,7 +363,7 @@ pub const EnemyManager = struct {
                 "fly",
                 Sprite.FrameAnimation.init(1, 12, .loopForward, 1),
             );
-            try self.shooter_master_pool.addSprite(s);
+            try self.shooter_master_pool.addSprite(allocator, s);
         }
 
         // Initialize ShooterEnemy projectile sprite pool
@@ -381,7 +381,7 @@ pub const EnemyManager = struct {
                 "fly",
                 Sprite.FrameAnimation.init(1, 6, .loopForward, 1),
             );
-            try self.shooter_projectile_pool.addSprite(s);
+            try self.shooter_projectile_pool.addSprite(allocator, s);
         }
     }
 
@@ -788,11 +788,15 @@ pub const EnemyManager = struct {
         try self.updateWithPlayerCenter(dummy_player_center);
     }
 
-    pub fn addRenderSurfaces(self: *EnemyManager) !void {
+    pub fn addRenderSurfaces(
+        self: *EnemyManager,
+        allocator: std.mem.Allocator,
+    ) !void {
         // Render SingleEnemies
         for (&self.active_single_enemies) |*enemy| {
             if (enemy.active) {
                 try self.screen.addRenderSurface(
+                    allocator,
                     try enemy.sprite.getCurrentFrameSurface(),
                 );
             }
@@ -806,12 +810,14 @@ pub const EnemyManager = struct {
                 while (i > 0) {
                     i -= 1;
                     try self.screen.addRenderSurface(
+                        allocator,
                         try swarm.tail_sprites[i].getCurrentFrameSurface(),
                     );
                 }
 
                 // Render master last (on top)
                 try self.screen.addRenderSurface(
+                    allocator,
                     try swarm.master_sprite.getCurrentFrameSurface(),
                 );
             }
@@ -823,6 +829,7 @@ pub const EnemyManager = struct {
             for (&shooter.launched_projectiles) |*proj| {
                 if (proj.active) {
                     try self.screen.addRenderSurface(
+                        allocator,
                         try proj.sprite.getCurrentFrameSurface(),
                     );
                 }
@@ -832,17 +839,20 @@ pub const EnemyManager = struct {
             if (shooter.active) {
                 // Render master
                 try self.screen.addRenderSurface(
+                    allocator,
                     try shooter.master_sprite.getCurrentFrameSurface(),
                 );
 
                 // Render attached projectiles (foreground)
                 if (shooter.left_projectile) |left| {
                     try self.screen.addRenderSurface(
+                        allocator,
                         try left.getCurrentFrameSurface(),
                     );
                 }
                 if (shooter.right_projectile) |right| {
                     try self.screen.addRenderSurface(
+                        allocator,
                         try right.getCurrentFrameSurface(),
                     );
                 }

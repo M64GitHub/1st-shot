@@ -96,11 +96,11 @@ pub const DropStacleManager = struct {
         const self = try allocator.create(DropStacleManager);
         self.* = DropStacleManager{
             .screen = screen,
-            .shield_drop_pool = movy.graphic.SpritePool.init(allocator),
-            .life_drop_pool = movy.graphic.SpritePool.init(allocator),
-            .ammo_drop_pool = movy.graphic.SpritePool.init(allocator),
-            .special_weapon_pool = movy.graphic.SpritePool.init(allocator),
-            .jackpot_pool = movy.graphic.SpritePool.init(allocator),
+            .shield_drop_pool = movy.graphic.SpritePool.init(),
+            .life_drop_pool = movy.graphic.SpritePool.init(),
+            .ammo_drop_pool = movy.graphic.SpritePool.init(),
+            .special_weapon_pool = movy.graphic.SpritePool.init(),
+            .jackpot_pool = movy.graphic.SpritePool.init(),
             .active_dropstacles = [_]DropStacle{.{ .active = false }} **
                 MaxDropStacles,
             .rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp())),
@@ -110,7 +110,10 @@ pub const DropStacleManager = struct {
         return self;
     }
 
-    fn initSprites(self: *DropStacleManager, allocator: std.mem.Allocator) !void {
+    fn initSprites(
+        self: *DropStacleManager,
+        allocator: std.mem.Allocator,
+    ) !void {
         const shield_path = "assets/dropstacle_shield.png";
         const life_path = "assets/dropstacle_life.png";
         const ammo_path = "assets/dropstacle_ammo.png";
@@ -130,7 +133,7 @@ pub const DropStacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 16, .loopForward, 2),
             );
-            try self.shield_drop_pool.addSprite(s);
+            try self.shield_drop_pool.addSprite(allocator, s);
 
             // Life drop
             s = try Sprite.initFromPng(
@@ -144,7 +147,7 @@ pub const DropStacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 16, .loopForward, 2),
             );
-            try self.life_drop_pool.addSprite(s);
+            try self.life_drop_pool.addSprite(allocator, s);
 
             // Ammo drop
             s = try Sprite.initFromPng(
@@ -158,7 +161,7 @@ pub const DropStacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 16, .loopForward, 2),
             );
-            try self.ammo_drop_pool.addSprite(s);
+            try self.ammo_drop_pool.addSprite(allocator, s);
 
             // Special weapon drop
             s = try Sprite.initFromPng(
@@ -172,7 +175,7 @@ pub const DropStacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 16, .loopForward, 2),
             );
-            try self.special_weapon_pool.addSprite(s);
+            try self.special_weapon_pool.addSprite(allocator, s);
 
             // Jackpot drop
             s = try Sprite.initFromPng(
@@ -186,7 +189,7 @@ pub const DropStacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 16, .loopForward, 1),
             );
-            try self.jackpot_pool.addSprite(s);
+            try self.jackpot_pool.addSprite(allocator, s);
         }
     }
 
@@ -337,10 +340,11 @@ pub const DropStacleManager = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *DropStacleManager) !void {
+    pub fn addRenderSurfaces(self: *DropStacleManager, allocator: std.mem.Allocator) !void {
         for (&self.active_dropstacles) |*drop| {
             if (drop.active) {
                 try self.screen.addRenderSurface(
+                    allocator,
                     try drop.sprite.getCurrentFrameSurface(),
                 );
             }

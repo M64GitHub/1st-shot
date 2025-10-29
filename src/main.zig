@@ -102,7 +102,7 @@ pub fn main() !void {
 
             // Run Game logic
             try game.update(allocator);
-            try game.renderFrame();
+            try game.renderFrame(allocator);
 
             var end_time = std.time.nanoTimestamp();
             const render_time_ns = end_time - start_time;
@@ -158,6 +158,6 @@ pub fn main() !void {
                     loop_time_buffer[0..loop_time_len],
                 },
             );
-        } else std.time.sleep(50_000);
+        } else std.Thread.sleep(50_000);
     }
 }

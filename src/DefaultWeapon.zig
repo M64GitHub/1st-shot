@@ -56,7 +56,7 @@ pub const DefaultWeapon = struct {
             .ammo = 9999,
             .projectiles = [_]Projectile{Projectile{ .active = false }} **
                 MaxProjectiles,
-            .projectile_sprites = movy.graphic.SpritePool.init(allocator),
+            .projectile_sprites = movy.graphic.SpritePool.init(),
         };
 
         try self.initSprites(allocator);
@@ -87,7 +87,7 @@ pub const DefaultWeapon = struct {
                 ),
             );
             try sprite.startAnimation("flying");
-            try self.projectile_sprites.addSprite(sprite);
+            try self.projectile_sprites.addSprite(allocator, sprite);
         }
     }
 
@@ -106,10 +106,14 @@ pub const DefaultWeapon = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *DefaultWeapon) !void {
+    pub fn addRenderSurfaces(
+        self: *DefaultWeapon,
+        allocator: std.mem.Allocator,
+    ) !void {
         for (&self.projectiles) |*proj| {
             if (proj.active) {
                 try self.screen.addRenderSurface(
+                    allocator,
                     try proj.sprite.getCurrentFrameSurface(),
                 );
             }

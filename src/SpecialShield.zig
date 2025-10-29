@@ -109,9 +109,13 @@ pub const SpecialShield = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *SpecialShield) !void {
+    pub fn addRenderSurfaces(
+        self: *SpecialShield,
+        allocator: std.mem.Allocator,
+    ) !void {
         if (self.active)
             try self.screen.addRenderSurface(
+                allocator,
                 try self.sprite.getCurrentFrameSurface(),
             );
     }

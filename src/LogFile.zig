@@ -16,12 +16,19 @@ pub const LogFile = struct {
 
     /// Log a message with a module prefix
     /// Example: log_file.log("[GameManager]", "Starting initialization", .{})
-    pub fn log(self: *LogFile, prefix: []const u8, comptime fmt: []const u8, args: anytype) void {
-        const writer = self.file.writer();
-        writer.writeAll(prefix) catch {};
-        writer.writeAll(" ") catch {};
-        writer.print(fmt, args) catch {};
-        writer.writeAll("\n") catch {};
+    pub fn log(
+        self: *LogFile,
+        prefix: []const u8,
+        comptime fmt: []const u8,
+        args: anytype,
+    ) void {
+        var buffer: [4096]u8 = undefined;
+        const message = std.fmt.bufPrint(
+            &buffer,
+            "{s} " ++ fmt ++ "\n",
+            .{prefix} ++ args,
+        ) catch return;
+        _ = self.file.write(message) catch {};
     }
 
     /// Close the log file and free heap allocation

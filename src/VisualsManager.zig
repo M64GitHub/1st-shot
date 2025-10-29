@@ -9,12 +9,11 @@ pub const VisualsManager = struct {
     // --
 
     pub fn init(
-        allocator: std.mem.Allocator,
         screen: *movy.Screen,
     ) VisualsManager {
         return VisualsManager{
             .screen = screen,
-            .visuals = std.ArrayList(*TimedVisual).init(allocator),
+            .visuals = .{},
         };
     }
 
@@ -42,7 +41,7 @@ pub const VisualsManager = struct {
 
         visual.active = true; // Auto start
         visual.state = .Starting;
-        try self.visuals.append(visual);
+        try self.visuals.append(allocator, visual);
     }
 
     pub fn startSprite(
@@ -63,7 +62,7 @@ pub const VisualsManager = struct {
         );
         visual.active = true; // Auto start
         visual.state = .Starting;
-        try self.visuals.append(visual);
+        try self.visuals.append(allocator, visual);
         return visual;
     }
 
@@ -88,7 +87,7 @@ pub const VisualsManager = struct {
 
         visual.active = true; // Auto start
         visual.state = .Starting;
-        try self.visuals.append(visual);
+        try self.visuals.append(allocator, visual);
     }
 
     pub fn startSurface(
@@ -110,7 +109,7 @@ pub const VisualsManager = struct {
         );
         visual.active = true; // Auto start
         visual.state = .Starting;
-        try self.visuals.append(visual);
+        try self.visuals.append(allocator, visual);
         return visual;
     }
 
@@ -163,10 +162,13 @@ pub const VisualsManager = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *VisualsManager) !void {
+    pub fn addRenderSurfaces(
+        self: *VisualsManager,
+        allocator: std.mem.Allocator,
+    ) !void {
         for (self.visuals.items) |vis| {
             if (vis.active)
-                try self.screen.addRenderSurface(vis.surface_out);
+                try self.screen.addRenderSurface(allocator, vis.surface_out);
         }
     }
 

@@ -12,15 +12,19 @@ pub fn build(b: *std.Build) void {
 
     const name = "1st-shot";
 
-    const game_exe = b.addExecutable(.{
-        .name = name,
+    const game_mod = b.addModule(name, .{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
-    game_exe.addIncludePath(b.path("src/core/lodepng/"));
-    game_exe.root_module.addImport("movy", mod_movy);
-    game_exe.root_module.addImport("resid", mod_resid);
+    game_mod.addIncludePath(b.path("src/core/lodepng/"));
+    game_mod.addImport("movy", mod_movy);
+    game_mod.addImport("resid", mod_resid);
+
+    const game_exe = b.addExecutable(.{
+        .name = name,
+        .root_module = game_mod,
+    });
     game_exe.linkLibC();
     game_exe.linkSystemLibrary("SDL2");
     b.installArtifact(game_exe);
@@ -36,14 +40,18 @@ pub fn build(b: *std.Build) void {
 
     // Demo: Subpixel movement comparison
     const demo_name = "demo-subpixel";
-    const demo_exe = b.addExecutable(.{
-        .name = demo_name,
+    const demo_mod = b.addModule(demo_name, .{
         .root_source_file = b.path("src/demo_subpixel.zig"),
         .target = target,
         .optimize = optimize,
     });
-    demo_exe.addIncludePath(b.path("src/core/lodepng/"));
-    demo_exe.root_module.addImport("movy", mod_movy);
+    demo_mod.addIncludePath(b.path("src/core/lodepng/"));
+    demo_mod.addImport("movy", mod_movy);
+
+    const demo_exe = b.addExecutable(.{
+        .name = demo_name,
+        .root_module = demo_mod,
+    });
     demo_exe.linkLibC();
     b.installArtifact(demo_exe);
 

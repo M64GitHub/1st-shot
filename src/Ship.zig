@@ -77,14 +77,16 @@ pub const Ship = struct {
         self.setXY(self.x, self.y);
     }
 
-    pub fn addRenderSurfaces(self: *Ship) !void {
+    pub fn addRenderSurfaces(self: *Ship, allocator: std.mem.Allocator) !void {
         if (!self.visible) return;
 
         try self.screen.addRenderSurface(
+            allocator,
             try self.sprite_ship.getCurrentFrameSurface(),
         );
 
         try self.screen.addRenderSurface(
+            allocator,
             try self.sprite_thrust.getCurrentFrameSurface(),
         );
     }

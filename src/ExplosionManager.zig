@@ -63,14 +63,14 @@ pub const ExplosionManager = struct {
         const self = try allocator.create(ExplosionManager);
         self.* = ExplosionManager{
             .screen = screen,
-            .small_pool = movy.graphic.SpritePool.init(allocator),
-            .small_purple_pool = movy.graphic.SpritePool.init(allocator),
-            .small_cyan_pool = movy.graphic.SpritePool.init(allocator),
-            .small_green_pool = movy.graphic.SpritePool.init(allocator),
-            .big_pool = movy.graphic.SpritePool.init(allocator),
-            .big_blu_pool = movy.graphic.SpritePool.init(allocator),
-            .huge_pool = movy.graphic.SpritePool.init(allocator),
-            .huge_blu_pool = movy.graphic.SpritePool.init(allocator),
+            .small_pool = movy.graphic.SpritePool.init(),
+            .small_purple_pool = movy.graphic.SpritePool.init(),
+            .small_cyan_pool = movy.graphic.SpritePool.init(),
+            .small_green_pool = movy.graphic.SpritePool.init(),
+            .big_pool = movy.graphic.SpritePool.init(),
+            .big_blu_pool = movy.graphic.SpritePool.init(),
+            .huge_pool = movy.graphic.SpritePool.init(),
+            .huge_blu_pool = movy.graphic.SpritePool.init(),
             .active_explosions = [_]Explosion{.{ .active = false }} **
                 MaxExplosions,
         };
@@ -108,7 +108,7 @@ pub const ExplosionManager = struct {
                 "explode",
                 Sprite.FrameAnimation.init(1, small_frames, .once, 1),
             );
-            try self.small_pool.addSprite(s);
+            try self.small_pool.addSprite(allocator, s);
 
             // small
             s = try Sprite.initFromPng(
@@ -122,7 +122,7 @@ pub const ExplosionManager = struct {
                 "explode",
                 Sprite.FrameAnimation.init(1, small_frames, .once, 1),
             );
-            try self.small_purple_pool.addSprite(s);
+            try self.small_purple_pool.addSprite(allocator, s);
 
             // small
             s = try Sprite.initFromPng(
@@ -136,7 +136,7 @@ pub const ExplosionManager = struct {
                 "explode",
                 Sprite.FrameAnimation.init(1, small_frames, .once, 1),
             );
-            try self.small_cyan_pool.addSprite(s);
+            try self.small_cyan_pool.addSprite(allocator, s);
 
             // small
             s = try Sprite.initFromPng(
@@ -150,7 +150,7 @@ pub const ExplosionManager = struct {
                 "explode",
                 Sprite.FrameAnimation.init(1, small_frames, .once, 1),
             );
-            try self.small_green_pool.addSprite(s);
+            try self.small_green_pool.addSprite(allocator, s);
 
             // big
             var b = try Sprite.initFromPng(
@@ -164,7 +164,7 @@ pub const ExplosionManager = struct {
                 "explode",
                 Sprite.FrameAnimation.init(1, big_frames, .once, 1),
             );
-            try self.big_pool.addSprite(b);
+            try self.big_pool.addSprite(allocator, b);
 
             // big, blu
             b = try Sprite.initFromPng(
@@ -178,7 +178,7 @@ pub const ExplosionManager = struct {
                 "explode",
                 Sprite.FrameAnimation.init(1, big_frames, .once, 1),
             );
-            try self.big_blu_pool.addSprite(b);
+            try self.big_blu_pool.addSprite(allocator, b);
 
             // huge
             var h = try Sprite.initFromPng(
@@ -192,7 +192,7 @@ pub const ExplosionManager = struct {
                 "explode",
                 Sprite.FrameAnimation.init(1, huge_frames, .once, 1),
             );
-            try self.huge_pool.addSprite(h);
+            try self.huge_pool.addSprite(allocator, h);
 
             // huge, blu
             h = try Sprite.initFromPng(
@@ -206,7 +206,7 @@ pub const ExplosionManager = struct {
                 "explode",
                 Sprite.FrameAnimation.init(1, huge_frames, .once, 1),
             );
-            try self.huge_blu_pool.addSprite(h);
+            try self.huge_blu_pool.addSprite(allocator, h);
         }
     }
 
@@ -297,7 +297,10 @@ pub const ExplosionManager = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *ExplosionManager) !void {
+    pub fn addRenderSurfaces(
+        self: *ExplosionManager,
+        allocator: std.mem.Allocator,
+    ) !void {
         for (&self.active_explosions) |*exp| {
             if (exp.active) {
                 if (exp.active) {
@@ -305,6 +308,7 @@ pub const ExplosionManager = struct {
                         continue;
                     }
                     try self.screen.addRenderSurface(
+                        allocator,
                         try exp.sprite.getCurrentFrameSurface(),
                     );
                 }

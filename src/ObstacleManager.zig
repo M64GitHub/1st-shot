@@ -88,10 +88,10 @@ pub const ObstacleManager = struct {
         const self = try allocator.create(ObstacleManager);
         self.* = ObstacleManager{
             .screen = screen,
-            .asteroids_small_pool = movy.graphic.SpritePool.init(allocator),
-            .asteroids_big_pool = movy.graphic.SpritePool.init(allocator),
-            .asteroids_big2_pool = movy.graphic.SpritePool.init(allocator),
-            .asteroids_huge_pool = movy.graphic.SpritePool.init(allocator),
+            .asteroids_small_pool = movy.graphic.SpritePool.init(),
+            .asteroids_big_pool = movy.graphic.SpritePool.init(),
+            .asteroids_big2_pool = movy.graphic.SpritePool.init(),
+            .asteroids_huge_pool = movy.graphic.SpritePool.init(),
             .active_obstacles = [_]Obstacle{.{ .active = false }} **
                 MaxObstacles,
             .rng = std.Random.DefaultPrng.init(@intCast(std.time.timestamp())),
@@ -120,7 +120,7 @@ pub const ObstacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 6, .loopBounce, 1),
             );
-            try self.asteroids_small_pool.addSprite(s);
+            try self.asteroids_small_pool.addSprite(allocator, s);
 
             // big
             var b = try Sprite.initFromPng(
@@ -134,7 +134,7 @@ pub const ObstacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 6, .loopBounce, 2),
             );
-            try self.asteroids_big_pool.addSprite(b);
+            try self.asteroids_big_pool.addSprite(allocator, b);
 
             b = try Sprite.initFromPng(
                 allocator,
@@ -147,7 +147,7 @@ pub const ObstacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 6, .loopBounce, 2),
             );
-            try self.asteroids_big2_pool.addSprite(b);
+            try self.asteroids_big2_pool.addSprite(allocator, b);
 
             // huge
             const h = try Sprite.initFromPng(
@@ -161,7 +161,7 @@ pub const ObstacleManager = struct {
                 "rotate",
                 Sprite.FrameAnimation.init(1, 6, .loopBounce, 1),
             );
-            try self.asteroids_huge_pool.addSprite(h);
+            try self.asteroids_huge_pool.addSprite(allocator, h);
         }
     }
 
@@ -314,12 +314,16 @@ pub const ObstacleManager = struct {
         }
     }
 
-    pub fn addRenderSurfaces(self: *ObstacleManager) !void {
+    pub fn addRenderSurfaces(
+        self: *ObstacleManager,
+        allocator: std.mem.Allocator,
+    ) !void {
         // add small ones first (-> on top of big ones)
         for (&self.active_obstacles) |*obs| {
             if (obs.active) {
                 switch (obs.kind) {
                     .AsteroidSmall => try self.screen.addRenderSurface(
+                        allocator,
                         try obs.sprite.getCurrentFrameSurface(),
                     ),
                     else => {},
@@ -332,9 +336,11 @@ pub const ObstacleManager = struct {
             if (obs.active) {
                 switch (obs.kind) {
                     .AsteroidBig => try self.screen.addRenderSurface(
+                        allocator,
                         try obs.sprite.getCurrentFrameSurface(),
                     ),
                     .AsteroidBig2 => try self.screen.addRenderSurface(
+                        allocator,
                         try obs.sprite.getCurrentFrameSurface(),
                     ),
                     else => {},
@@ -347,6 +353,7 @@ pub const ObstacleManager = struct {
             if (obs.active) {
                 switch (obs.kind) {
                     .AsteroidHuge => try self.screen.addRenderSurface(
+                        allocator,
                         try obs.sprite.getCurrentFrameSurface(),
                     ),
                     else => {},
