@@ -5,6 +5,7 @@ const GameManager = @import("GameManager.zig").GameManager;
 const stdout = std.io.getStdOut().writer();
 
 const FRAME_DELAY_NS = 14 * std.time.ns_per_ms; // ~71 FPS
+const KEYDOWN_TIME: usize = 5; // key up after 5 frames
 
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
@@ -52,7 +53,6 @@ pub fn main() !void {
     var frame: usize = 0;
 
     // Keyboard control
-    const keydown_time: usize = 5;
     var keydown_cooldown: usize = 0;
     var last_key: ?movy.input.Key = null;
     var freeze: i32 = 0;
@@ -74,7 +74,7 @@ pub fn main() !void {
                         },
                         else => {
                             last_key = key;
-                            keydown_cooldown = keydown_time;
+                            keydown_cooldown = KEYDOWN_TIME;
                             game.onKeyDown(last_key.?);
                         },
                     };
