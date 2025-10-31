@@ -7,13 +7,13 @@
     .minimum_zig_version = "0.15.2",
 
     .dependencies = .{
-        .movy = .{
-            .url = "https://github.com/M64GitHub/movy/archive/refs/tags/v0.0.2.tar.gz",
-            .hash = "movy-0.1.0-UtRV68qjCwAMzfeYJV2ZRy1RXw4rXoQIj-t2yaMt2Agj",
-        },
         .resid = .{
             .url = "https://github.com/M64GitHub/zigreSID/archive/refs/tags/v0.5.0.tar.gz",
             .hash = "resid-0.5.0-CVhkLsp0CwDSJejbTOub4ir4sj1q4-yMLAr_7TcALvZV",
+        },
+        .movy = .{
+            .url = "https://github.com/M64GitHub/movy/archive/refs/tags/v0.0.3.tar.gz",
+            .hash = "movy-0.0.3-UtRV66y0CwCu40D4G-vuXkp49QOxW1uXU80ZV0POLFtS",
         },
     },
 

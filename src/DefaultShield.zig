@@ -12,7 +12,7 @@ pub const DefaultShield = struct {
     active: bool = false,
     mode: Mode = .Normal,
 
-    pub const Cooldown: usize = 500;
+    pub const Cooldown: usize = 600;
     pub const Warn1: usize = 150;
     pub const Warn2: usize = 50;
 

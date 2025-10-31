@@ -264,17 +264,17 @@ pub const EnemyManager = struct {
 
     // Spawning state
     single_spawn_cooldown: usize = 0,
-    single_spawn_interval: usize = 600,
+    single_spawn_interval: usize = 400,
     swarm_spawn_cooldown: usize = 0,
     swarm_spawn_interval: usize = 300,
     swarm_unlock_frame: usize = 1000,
     shooter_spawn_cooldown: usize = 0,
-    shooter_spawn_interval: usize = 1500,
+    shooter_spawn_interval: usize = 1000,
     shooter_unlock_frame: usize = 2000,
 
     // Configuration
-    max_single_concurrent: usize = 2,
-    max_shooter_concurrent: usize = 2,
+    max_single_concurrent: usize = 3,
+    max_shooter_concurrent: usize = 3,
 
     rng: std.Random.DefaultPrng,
 
@@ -748,12 +748,8 @@ pub const EnemyManager = struct {
 
             if (shooter_count < self.max_shooter_concurrent) {
                 if (self.shooter_spawn_cooldown == 0) {
-                    // Spawn 1 or 2 enemies (50% chance each)
                     const count =
-                        if (self.rng.random().boolean()) @as(
-                            usize,
-                            1,
-                        ) else @as(usize, 2);
+                        self.rng.random().intRangeAtMost(usize, 1, 3);
 
                     for (0..count) |_| {
                         const rand_x: i32 = self.rng.random().intRangeAtMost(

@@ -93,10 +93,10 @@ pub fn main() !void {
 
         // Update sprite, and alien cursor position
         // Measure render time
-        const start_time = std.time.nanoTimestamp();
 
         // Run Game logic
         try game.update(allocator);
+        const start_time = std.time.nanoTimestamp();
         try game.renderFrame(allocator);
 
         var end_time = std.time.nanoTimestamp();

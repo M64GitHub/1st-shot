@@ -74,9 +74,9 @@ pub const ObstacleManager = struct {
     active_obstacles: [MaxObstacles]Obstacle,
 
     // auto spawn
-    target_count: usize = 8,
+    target_count: usize = 9,
     spawn_cooldown: u8 = 0,
-    spawn_interval: u8 = 60, // 36, // spawn wvery n frames
+    spawn_interval: u8 = 50, // 36, // spawn wvery n frames
     rng: std.Random.DefaultPrng,
 
     pub const MaxObstacles = 32;
@@ -118,8 +118,9 @@ pub const ObstacleManager = struct {
             try s.addAnimation(
                 allocator,
                 "rotate",
-                Sprite.FrameAnimation.init(1, 6, .loopBounce, 1),
+                Sprite.FrameAnimation.init(1, 6, .loopBounce, 3),
             );
+            try s.startAnimation("rotate");
             try self.asteroids_small_pool.addSprite(allocator, s);
 
             // big
@@ -132,8 +133,9 @@ pub const ObstacleManager = struct {
             try b.addAnimation(
                 allocator,
                 "rotate",
-                Sprite.FrameAnimation.init(1, 6, .loopBounce, 2),
+                Sprite.FrameAnimation.init(1, 6, .loopBounce, 6),
             );
+            try b.startAnimation("rotate");
             try self.asteroids_big_pool.addSprite(allocator, b);
 
             b = try Sprite.initFromPng(
@@ -145,8 +147,9 @@ pub const ObstacleManager = struct {
             try b.addAnimation(
                 allocator,
                 "rotate",
-                Sprite.FrameAnimation.init(1, 6, .loopBounce, 2),
+                Sprite.FrameAnimation.init(1, 6, .loopBounce, 5),
             );
+            try b.startAnimation("rotate");
             try self.asteroids_big2_pool.addSprite(allocator, b);
 
             // huge
@@ -159,8 +162,9 @@ pub const ObstacleManager = struct {
             try h.addAnimation(
                 allocator,
                 "rotate",
-                Sprite.FrameAnimation.init(1, 6, .loopBounce, 1),
+                Sprite.FrameAnimation.init(1, 6, .loopBounce, 4),
             );
+            try h.startAnimation("rotate");
             try self.asteroids_huge_pool.addSprite(allocator, h);
         }
     }
@@ -302,7 +306,7 @@ pub const ObstacleManager = struct {
                         .AsteroidBig => self.asteroids_big_pool.release(
                             obs.sprite,
                         ),
-                        .AsteroidBig2 => self.asteroids_big_pool.release(
+                        .AsteroidBig2 => self.asteroids_big2_pool.release(
                             obs.sprite,
                         ),
                         .AsteroidHuge => self.asteroids_huge_pool.release(
