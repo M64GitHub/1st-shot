@@ -67,14 +67,12 @@ Check the source for the cheat codes ;) !
 
 - **movy** - Terminal rendering engine
 
-- **zigreSID** - MOS 6581/8580 SID chip emulator
-  - MixingDumpPlayer for WAV mixing
-  - SDL2 audio output
+- **zigreSID** - MOS 6581/8580 SID chip emulator & WAV mixer
 
 ### System Dependencies
 
 - **SDL2** - Audio output and WAV loading
-- **Zig 0.15.2** - Build system and language
+- **Zig 0.15.2**
 
 ## License
 
