@@ -65,14 +65,8 @@ Check the source for the cheat codes ;) !
 
 ### Zig Libraries
 
-- **movy** - Terminal rendering engine
-
-- **zigreSID** - MOS 6581/8580 SID chip emulator & WAV mixer
-
-### System Dependencies
-
-- **SDL2** - Audio output and WAV loading
-- **Zig 0.15.2**
+- **[movy](https://github.com/M64GitHub/movy)** - Terminal rendering engine
+- **[zigreSID](https://github.com/M64GitHub/zigreSID)** - MOS 6581/8580 SID chip emulator & WAV mixer
 
 ## License
 
