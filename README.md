@@ -24,15 +24,10 @@ I started to track versions, and include a versionized [RELEASE_NOTES_v0.0.3.md]
 
 ### Highlights
 
-- Renders PNG sprites in 24-bit color, slicing animations from spritesheets
-- Implements subpixel movement for smooth motion
+- PNG sprites in 24-bit color, slicing animations from spritesheets
+- Subpixel movement for smooth motion
 - Steady 71 FPS! (new)
-- Generates authentic C64 SID music on a dedicated audio thread, mixing PCM in real time
-
-## What's New
-
-- **Upgraded to Zig 0.15.2**
-- **Constant FPS rendering:** gameplay now runs at a stable frame rate across all terminals — 71 silky-smooth and consistent FPS no matter your window size! (When font is too small, it will slow down though, no frame is skipped ;) )
+- Authentic C64 SID music on a dedicated audio thread, mixing PCM in real time
 
 ## Quick Start
 
@@ -65,59 +60,6 @@ zig build run-1st-shot
 | **ESC** | Quit |
 
 Check the source for the cheat codes ;) !
-
-## How to Play
-
-### Survive the onslaught!
-
-**Destroy enemies and asteroids** to earn points. **Collect power-ups** to upgrade your ship. **Avoid collision** to survive.
-
-### Enemy Types
-
-#### **SingleEnemy** (250 pts)
-- Simple but deadly
-- Two movement patterns: Straight or Zigzag
-- Unlocked from start
-- Health: 5 hits
-
-#### **SwarmEnemy** (500 pts)
-- Snake-like formations
-- Grows longer the longer you survive (up to 17 segments!)
-- Graduated amplitude creates mesmerizing wave patterns
-- Unlocks at **1000 frames (~16 seconds)**
-- Health: 15 hits (hit the head!)
-
-#### **ShooterEnemy** (350 pts)
-- Simple "intelligence" with state machine
-- Fires two tracking projectiles at your position
-- **Danger**: When destroyed, attached bullets become orphans and fall!
-- Unlocks at **2000 frames (~33 seconds)**
-- Health: 3 hits (shoot the bullets for instant kill!)
-
-### Power-Ups
-
-- **Ammo**: Refills spread weapon
-- **Shield**: Temporary invincibility
-- **Extra Life**: Gain 1 life
-- **Score Bonus**: Instant points
-
-### Dropstacles
-
-The blue round objects. Shoot these to collect rewards (but don't touch them!):
-- **ShieldDrop** (25%)
-- **LifeDrop** (20%)
-- **AmmoDrop** (40%)
-- **Jackpot** (5%): Shield + Life + 100 Ammo!
-
-They all look the same, the actual reward will be a surprise.  
-(numbers in brackets are the chance for the reward type)
-
-### Score Milestones
-
-Reach these scores to auto-unlock bonuses:
-- **3,000**: Ammo bonus
-- **5,000**: Shield bonus
-- **10,000**: Extra life
 
 ## Dependencies
 
