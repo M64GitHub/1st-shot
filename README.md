@@ -145,4 +145,5 @@ Whether it’s a small demo, a new effect, or a full game — build something th
 
 ---
 
-**Made with 💜 and Zig**
+Built with `<3` and **Zig** and **movy**.
+
