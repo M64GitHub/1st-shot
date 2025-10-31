@@ -36,7 +36,7 @@ I started to track versions, and include a versionized [RELEASE_NOTES_v0.0.3.md]
 - **SDL2** (for audio)
 - Terminal with 24-bit color support (most modern terminals)
 
-### Install
+### Build and Run
 
 ```bash
 # Clone repository
