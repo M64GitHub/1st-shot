@@ -1,50 +1,46 @@
-# 1ST-SHOT — My First Shot at a Terminal Game
+# Release Notes - v0.0.4
 
-Hi everyone,
+## Update movy version
 
-After **Zigtoberfest 2025**, I wanted to make this version public so others can **play with it, study it, and modify it**.
-This is **1ST-SHOT**, my very first experiment in building a visually rich, animated game right inside the terminal.
+Update to performance enhanced movy 0.1.0
 
-I originally built this as part of my talk at Zigtoberfest, and I’m releasing it exactly as it is today — not because it’s finished, but because it already feels alive, and to start the Terminal Revolution! ;)
+# Release Notes - v0.0.3
 
-## What this release is
+## Gameplay Changes & Fixes
 
-Think of 1ST-SHOT as both a **playable demo** and a **learning project**.
-It’s here to show how you can structure a smooth game loop in Zig, how to animate sprites with movy, and how to trigger sounds through the SoundManager.
+**Overall Impact**: This release adjusts game difficulty through more aggressive enemy spawning and higher asteroid density, while fixing an animation bugs (asteroids did not play animation).  
+Shield now holds a bit longer.  
+Shooter enemies and Single Enemies can now spawn up to 3 at the same time! More fun!
 
-You can fly, shoot, destroy asteroids, and see real explosions — all running in real time inside your terminal.
-Beware of the shootin enemies! They are evil and aim directly at you!
+### Difficulty & Balance Adjustments
 
-At the beginning, please make sure you destroy the blueish something falling down slowly, it will give you the better weapon!
-And as I know my zig hacker friends, you will soon discover all the cheat codes, I left in the source (for testing).
+**Increased Enemy Pressure**
+- Single enemies spawn more frequently (600 → 400 frames between spawns)
+- Shooter enemies spawn more frequently (1500 → 1000 frames between spawns)
+- Maximum concurrent single enemies increased (2 → 3)
+- Maximum concurrent shooter enemies increased (2 → 3)
 
-## What’s still missing
+**Asteroid Field Intensity**
+- Target asteroid count increased (8 → 9 active asteroids)
+- Asteroid spawn rate increased (60 → 50 frames between spawns)
+- More varied asteroid animation speeds for visual diversity:
+  - Small asteroids: slower animation (speed 3, previously 1)
+  - Big asteroids: much slower animation (speed 6, previously 2)
+  - Big2 asteroids: slower animation (speed 5, previously 2)
+  - Huge asteroids: slower animation (speed 4, previously 1)
 
-This isn’t a polished game yet — it’s my *first shot*.
-There’s no proper HUD yet; instead, you’ll still see some debug overlays on the screen.
-The current music track is a **temporary placeholder** too.
-But everything else is there: the logic, the loop, the movement, and hopefully the joy!
+**Shield Balance**
+- Default shield cooldown slightly increased (500 → 600 frames)
 
-## I encourage you to experiment
+## Bug Fixes
 
-Please don’t hesitate to dive in!
+### Animation Bug in movy Library
+- **Fixed `.loopBounce` animation mode causing animations to freeze**
+  - Corrected integer wraparound bug in `IndexAnimator` when reversing direction
+  - All bounce-style animations (asteroids) now animate smoothly
+- **Fixed animation state not fully resetting when sprites are pooled**
+  - Sprites reused from pools now properly reset animation timing
 
-* Change the spritesheets, add new ships or effects
-* Try out new sounds or SID tunes
-* Extend the gameplay logic
-* Use the little **asset-creation helper tool** in `assets/code/` to make your own art
-
-This release is meant to **invite you in** — to learn from it, remix it, and make it your own.
-
-## What comes next
-
-I’ll keep developing the game — adding the missing HUD, improving level flow, balancing gameplay, and composing an original soundtrack.
-But for now, I’m proud to share this snapshot with you.
-
-1ST-SHOT is my love letter to the Commodore 64 spirit — and a demonstration of what’s possible when you bring that energy into Zig.
-
-Enjoy exploring it, playing it, and maybe breaking it.
-Have fun — and fire your first shot!
-
-— Mario (“M64”)
+### ObstacleManager Fixes
+- **Fixed sprite pool release bug**: AsteroidBig2 now properly releases to correct pool (was incorrectly releasing to AsteroidBig pool)
 

@@ -1,0 +1,6 @@
+.zig-cache/
+assets/.DS_Store
+assets/audio/.DS_Store
+game.log
+zig-out/
+

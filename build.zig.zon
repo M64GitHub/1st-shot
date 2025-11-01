@@ -1,6 +1,6 @@
 .{
     .name = ._1st_shot,
-    .version = "0.0.0",
+    .version = "0.0.4",
 
     .fingerprint = 0x7fb6433681e53549,
 
@@ -12,8 +12,8 @@
             .hash = "resid-0.5.0-CVhkLsp0CwDSJejbTOub4ir4sj1q4-yMLAr_7TcALvZV",
         },
         .movy = .{
-            .url = "https://github.com/M64GitHub/movy/archive/refs/tags/v0.0.3.tar.gz",
-            .hash = "movy-0.0.3-UtRV66y0CwCu40D4G-vuXkp49QOxW1uXU80ZV0POLFtS",
+            .url = "https://github.com/M64GitHub/movy/archive/refs/tags/v0.1.0.tar.gz",
+            .hash = "movy-0.0.4-UtRV6xTmCwBXPu130iqjXTGTuzlPjBOcT7S2SmF_pdvw",
         },
     },
 
