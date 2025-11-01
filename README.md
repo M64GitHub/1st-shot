@@ -15,8 +15,6 @@ Next-Level Terminal Bullet Hell — powered by [movy](https://github.com/M64GitH
 > After [**Zigtoberfest 2025**](https://zigtoberfest.de), I wanted to make this version public so others can **play with it, study it, and modify it**.  
 > It’s not a finished game — it's a *playable demo and learning project* 
 
-I started to track versions, and include a versionized [RELEASE_NOTES_v0.0.3.md](./RELEASE_NOTES_v0.0.3.md) file for the current release.
-
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
 <p/>
