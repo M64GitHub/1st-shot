@@ -68,6 +68,7 @@ Check the source for the cheat codes ;) !
 ## License
 
 MIT. Hack it, spread it!
+
 ---
 
 Built with `<3` and **Zig** and **movy**.
