@@ -11,10 +11,6 @@
 ```
 Next-Level Terminal Bullet Hell — powered by [movy](https://github.com/M64GitHub/movy)  
 
-> **1ST-SHOT** is my first attempt at building a visually rich, animated game inside the terminal — powered entirely by my rendering engine "movy".  
-> After [**Zigtoberfest 2025**](https://zigtoberfest.de), I wanted to make this version public so others can **play with it, study it, and modify it**!  
-> It’s not a finished game — it's a *playable demo and learning project*.
-
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
 <p/>
