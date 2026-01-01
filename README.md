@@ -9,7 +9,7 @@
  |___/_______  /  |____|         /_______  /\___X_  /\_______  /____|   
              \/                          \/       \/         \/         
 ```
-Next-Level Terminal Bullet Hell — powered by [movy](https://github.com/M64GitHub/movy)  
+Next-Level Terminal Bullet Hell, powered by [movy](https://github.com/M64GitHub/movy)  
 
 <img width="1920" height="1080" alt="Screenshot 2025-10-24 at 01 25 08" src="https://github.com/user-attachments/assets/309202bf-c3da-4b80-9536-7d12ffa8b249" />
 
