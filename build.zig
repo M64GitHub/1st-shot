@@ -3,12 +3,36 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = std.builtin.OptimizeMode.ReleaseFast;
+    const sdl2_prefix_option = b.option([]const u8, "sdl2-prefix", "Path to the SDL2 installation prefix containing include/ and lib/");
 
     const dep_movy = b.dependency("movy", .{});
     const mod_movy = dep_movy.module("movy");
 
     const dep_resid = b.dependency("resid", .{});
     const mod_resid = dep_resid.module("resid");
+    const mod_resid_mixer = dep_resid.module("resid_mixer");
+
+    const is_macos = target.result.os.tag == .macos;
+    const SDL2Paths = struct {
+        include: []const u8,
+        lib: []const u8,
+    };
+    var sdl2_paths: ?SDL2Paths = null;
+
+    // Add SDL2 paths on macOS.
+    if (is_macos) {
+        const default_sdl2_prefix = "/opt/homebrew/opt/sdl2";
+        const sdl2_prefix = sdl2_prefix_option orelse default_sdl2_prefix;
+        sdl2_paths = .{
+            .include = b.pathJoin(&.{ sdl2_prefix, "include" }),
+            .lib = b.pathJoin(&.{ sdl2_prefix, "lib" }),
+        };
+    }
+
+    if (sdl2_paths) |paths| {
+        mod_resid_mixer.addIncludePath(.{ .cwd_relative = paths.include });
+        mod_resid_mixer.addLibraryPath(.{ .cwd_relative = paths.lib });
+    }
 
     const name = "1st-shot";
 
@@ -27,6 +51,12 @@ pub fn build(b: *std.Build) void {
     });
     game_exe.linkLibC();
     game_exe.linkSystemLibrary("SDL2");
+
+    // Add SDL2 paths when building on macOS.
+    if (sdl2_paths) |paths| {
+        game_exe.addIncludePath(.{ .cwd_relative = paths.include });
+        game_exe.addLibraryPath(.{ .cwd_relative = paths.lib });
+    }
     b.installArtifact(game_exe);
 
     // Add run step for main game
